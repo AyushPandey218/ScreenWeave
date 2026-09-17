@@ -1,0 +1,8 @@
+# Experimental OCR environment; uses the OpenCV package required by RapidOCR.
+# Do not install alongside opencv-python-headless: both supply the cv2 module.
+-r requirements.txt
+pillow==12.3.0
+psutil==7.2.2
+rapidocr-onnxruntime==1.4.4
+onnxruntime==1.30.0
+opencv-python==5.0.0.93

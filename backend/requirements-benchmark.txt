@@ -1,0 +1,4 @@
+-r requirements.txt
+pillow==12.3.0
+opencv-python-headless==5.0.0.93
+psutil==7.2.2
