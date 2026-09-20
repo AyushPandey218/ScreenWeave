@@ -1,3 +1,5 @@
+import {useEffect, useRef} from 'react';
+
 type Props = {
   source: string;
   name: string;
@@ -7,6 +9,17 @@ type Props = {
 };
 
 export default function ReconstructionLoading({source, name, elapsed, saving, onCancel}: Props) {
+  const dialog = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    const element = dialog.current;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    element?.showModal();
+    return () => {
+      element?.close();
+      document.body.style.overflow = previousOverflow;
+    };
+  }, []);
   const waiting = elapsed >= 25;
   const title = saving ? 'Your draft is ready.' : waiting ? 'Good things take a little processing.' : 'Weaving your interface.';
   const message = saving
@@ -14,7 +27,9 @@ export default function ReconstructionLoading({source, name, elapsed, saving, on
     : waiting
       ? 'We’re still waiting for the result. The service may need extra time to start after being idle.'
       : 'Turning the text, shapes, and details in your screenshot into an editable first draft.';
-  return <section className="reconstruction-loading" aria-labelledby="reconstruction-title">
+  return <dialog ref={dialog} className="reconstruction-dialog" aria-labelledby="reconstruction-title" aria-describedby="reconstruction-description" onCancel={event => {event.preventDefault(); if (!saving) onCancel();}}>
+    <div className="loading-screen-header"><span className="brand"><img src="/favicon.svg" alt="" width="34" height="34"/>ScreenWeave</span><span className="loading-screen-label">YOUR NEXT INTERFACE IS TAKING SHAPE</span></div>
+    <div className="loading-screen-center"><section className="reconstruction-loading">
     <div className="weave-preview" aria-hidden="true">
       <div className="weave-preview-top"><span/><span/><span/><small>YOUR REFERENCE</small></div>
       <div className="weave-preview-stage">
@@ -29,7 +44,7 @@ export default function ReconstructionLoading({source, name, elapsed, saving, on
       <span className="weave-badge"><img src="/favicon.svg" alt="" width="20" height="20"/> SCREENWEAVE STUDIO</span>
       <div role="status" aria-live="polite" aria-atomic="true">
         <h2 id="reconstruction-title">{title}</h2>
-        <p className="weave-description">{message}</p>
+        <p id="reconstruction-description" className="weave-description">{message}</p>
       </div>
       <ol className="weave-steps" aria-label="Reconstruction progress">
         <li className="complete"><span>✓</span><div><strong>Reference selected</strong><small title={name}>{name}</small></div></li>
@@ -43,5 +58,6 @@ export default function ReconstructionLoading({source, name, elapsed, saving, on
       </div>
       <p className="weave-footnote">Keep this page open. Your editor opens automatically when the draft is saved.</p>
     </div>
-  </section>;
+  </section></div>
+  </dialog>;
 }
