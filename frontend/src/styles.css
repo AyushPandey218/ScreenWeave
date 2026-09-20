@@ -143,3 +143,24 @@ summary:focus-visible{outline:3px solid #8aaf4e;outline-offset:5px}
 @keyframes toast-arrive{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:520px){.notification-stack{right:16px;bottom:max(16px,env(safe-area-inset-bottom))}.toast-close{width:40px;height:40px}}
 @media(forced-colors:active){*{scrollbar-color:auto}}
+
+.insert-tools{border-bottom:1px solid var(--line);padding-bottom:10px}
+.insert-tools .sidebar-heading{border-bottom:0;padding-bottom:10px}
+.insert-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:0 10px}
+.insert-grid button{padding:9px 7px;font-size:10px;gap:6px;justify-content:flex-start}
+.insert-grid button>span{color:#65834e;font-size:14px}
+.insert-note,.insert-error{font-size:10px;line-height:1.6;padding:0 12px;margin:10px 0 0;color:#66765b}
+.insert-error{color:#934b3b}
+.comparison-toolbar{display:flex;align-items:center;flex-wrap:wrap;gap:10px;padding:10px 14px;background:#fafcf6;border-bottom:1px solid var(--line)}
+.comparison-toolbar button{font-size:10px;padding:7px 10px}
+.comparison-toolbar button[aria-pressed=true]{background:#e7f0d9;border-color:#acc78b}
+.opacity-control,.outline-control{display:flex;flex-direction:row;align-items:center;gap:8px;font-size:10px;color:#52694a}
+.opacity-control input{width:90px;accent-color:#6e914b;padding:0}
+.opacity-control output{min-width:30px;font-variant-numeric:tabular-nums}
+.outline-control input{accent-color:#6e914b;width:14px;height:14px;margin:0}
+.comparison-note{font-size:9px;color:#677d58}
+.comparison-overlay{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:3}
+.artboard.hide-outlines .element-hit.selected,.artboard.hide-outlines .element-hit:hover{outline:none;background:transparent}
+.artboard.hide-outlines .resize-handle{display:none}
+@media(max-width:800px){.insert-grid{grid-template-columns:1fr}.comparison-toolbar{padding:9px;gap:9px}}
+@media(max-width:520px){.insert-grid{grid-template-columns:repeat(5,minmax(0,1fr))}.insert-grid button{flex-direction:column;justify-content:center;padding:8px 3px;font-size:9px;gap:4px}.insert-tools .sidebar-heading{padding:10px 15px}.insert-note{margin-top:6px}.comparison-note{width:100%}}

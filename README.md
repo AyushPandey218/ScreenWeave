@@ -209,3 +209,19 @@ including OCR, geometry detection, and both ZIP exports. It writes
 hardware measurements. OCR's internal image is now capped at a 960px long side
 to reduce peak memory; returned geometry still uses source-image coordinates.
 Small text in large images may lose accuracy at this resolution.
+
+### Compare and complete a draft
+
+In the editor, enable **Compare original** and adjust its opacity to see
+differences against the reconstruction. **Selection outlines** can be hidden.
+Comparison settings are editor-only and do not change exported code.
+
+Use **Add element** for missing text, buttons, inputs, cards, and images.
+New elements are editable, saved locally, and included in undo/redo and exports.
+Cards start behind existing layers. Images accept PNG/JPEG under 5 MiB and
+4 megapixels, then are resized to at most 512 pixels on their longest side
+(and further if needed) to fit the embedded PNG size limit.
+The layout supports at most 500 elements.
+
+Run frontend/test-tools.cjs with Playwright and local servers to check these
+features, exports, reload persistence, and mobile overflow.
