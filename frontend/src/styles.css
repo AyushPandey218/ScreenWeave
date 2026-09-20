@@ -127,3 +127,19 @@ summary:focus-visible{outline:3px solid #8aaf4e;outline-offset:5px}
 .reconstruction-dialog .weave-content h2{font-size:36px}
 @media(max-width:800px){.reconstruction-dialog .reconstruction-loading{padding:28px;gap:28px}.reconstruction-dialog .weave-content h2{font-size:29px}.reconstruction-dialog .weave-preview-stage{height:300px}.loading-screen-label{display:none}}
 @media(max-width:600px){.loading-screen-header{padding:18px 5%}.loading-screen-center{padding:10px 5% 25px;align-items:flex-start}.reconstruction-dialog .reconstruction-loading{padding:20px;gap:22px;border-radius:18px}.reconstruction-dialog .weave-preview-stage{height:180px}.reconstruction-dialog .weave-content h2{font-size:27px}}
+
+/* Scrollbars follow the same quiet sage palette as the workspace. */
+*{scrollbar-width:thin;scrollbar-color:#81936f #edf1e8}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:#edf1e8;border-radius:10px}
+::-webkit-scrollbar-thumb{background:#81936f;border:2px solid #edf1e8;border-radius:10px}
+::-webkit-scrollbar-thumb:hover{background:#526b42}
+::-webkit-scrollbar-corner{background:#edf1e8}
+.notification-stack{position:fixed;right:24px;bottom:24px;z-index:50;display:flex;flex-direction:column;gap:10px;width:min(380px,calc(100vw - 32px));pointer-events:none}
+.event-toast{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid #ccdcbf;border-radius:13px;padding:14px 12px 14px 16px;box-shadow:0 8px 35px #172e301a;pointer-events:auto;animation:toast-arrive .2s ease-out}
+.event-toast p{font-size:12px;line-height:1.6;color:#2d4536;margin:0;flex:1;overflow-wrap:anywhere}
+.toast-symbol{width:27px;height:27px;flex-shrink:0;display:grid;place-items:center;border-radius:50%;background:#eaf3dd;color:#55753a;font-size:13px}
+.toast-close{border:0;background:transparent;padding:4px;width:32px;height:32px;font-size:22px;color:#607351;flex-shrink:0}
+@keyframes toast-arrive{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:520px){.notification-stack{right:16px;bottom:max(16px,env(safe-area-inset-bottom))}.toast-close{width:40px;height:40px}}
+@media(forced-colors:active){*{scrollbar-color:auto}}

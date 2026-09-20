@@ -1,3 +1,4 @@
+import {notify} from './Notifications';
 import {useEffect,useRef,useState,type PointerEvent} from 'react';
 import {ElementEditor,type Element,type Layout} from './ElementEditor';
 import {apiRequest,navigate,saveProject,type Project,type Result} from './projects';
@@ -30,7 +31,7 @@ export default function Editor({project}:{project:Project}){
  function move(e:PointerEvent<HTMLButtonElement>){const g=gesture.current;if(!g)return;const dx=Math.round((e.clientX-g.x)/scale),dy=Math.round((e.clientY-g.y)/scale),clamp=(n:number,min=0)=>Math.max(min,Math.min(10000,n));setMotion({...g.element,x:g.resize?g.element.x:clamp(g.element.x+dx),y:g.resize?g.element.y:clamp(g.element.y+dy),width:g.resize?clamp(g.element.width+dx,1):g.element.width,height:g.resize?clamp(g.element.height+dy,1):g.element.height});}
  function finish(){if(motion)commit({...draft,elements:draft.elements.map(e=>e.id===motion.id?motion:e)});gesture.current=null;setMotion(null);}
  function cancel(){gesture.current=null;setMotion(null);}
- function download(kind:'html'|'react'){if(!result||pending||error)return;const bytes=Uint8Array.from(atob(result.exports[kind]),c=>c.charCodeAt(0));const url=URL.createObjectURL(new Blob([bytes],{type:'application/zip'}));const a=document.createElement('a');a.href=url;a.download='screenweave-'+kind+'.zip';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+ function download(kind:'html'|'react'){if(!result||pending||error)return;const bytes=Uint8Array.from(atob(result.exports[kind]),c=>c.charCodeAt(0));const url=URL.createObjectURL(new Blob([bytes],{type:'application/zip'}));const a=document.createElement('a');a.href=url;a.download='screenweave-'+kind+'.zip';a.click();notify(kind==='react'?'React project download requested.':'HTML / CSS download requested.');setTimeout(()=>URL.revokeObjectURL(url),1000);}
  const srcDoc=result?.html.replace('<link rel="stylesheet" href="styles.css">',`<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'none'"><style>${result.css}</style>`);
  const handle=motion?.id===selected?motion:chosen;
  return <div className="studio">
