@@ -4,7 +4,6 @@ AI-assisted screenshot reconstruction into editable websites.
 
 ## Agreed scope
 
-- Solo MCA AI/ML project using free tools and services.
 - Fully hosted operation: Vercel frontend and Render backend; no dependency on the developer's laptop.
 - Initial inputs: desktop login screens and simple landing pages.
 - Detect text, buttons, inputs, images, cards, and containers.
