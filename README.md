@@ -22,39 +22,44 @@ AI-assisted screenshot reconstruction into editable websites.
 
 ## Stack
 
-React, Vite, TypeScript, Tailwind CSS, Monaco Editor; Python, FastAPI, OpenCV, Pillow; PyTorch for training and potentially ONNX Runtime for deployment. Model and OCR choices remain subject to resource and license checks. Accounts and Supabase persistence are deferred.
+React 19, Vite, TypeScript, and custom CSS; Python, FastAPI, OpenCV,
+Pillow, RapidOCR, and ONNX Runtime. The current reconstruction pipeline uses OCR
+and geometry heuristics. A trained UI detector remains future work.
 
 ## Current status
 
-Backend hosting scaffold and an experimental command-line screenshot-to-HTML/CSS
-pipeline are implemented. One synthetic login screenshot has been reconstructed
-and rendered in a browser. React/TypeScript export now builds and renders too.
-The local web upload workflow now supports original/preview comparison, HTML/CSS
-viewing, and both ZIP exports. A trained UI detector and public deployment remain
-unimplemented or unvalidated. Element property editing is available; direct
-source-code editing is not available yet.
+The initial app is deployed on Vercel and Render and was verified by the owner.
+The redesign adds Home, Projects, New project, Examples, Help, and dedicated
+editor routes. Projects and source screenshots autosave in IndexedDB in the
+current browser. They survive refresh, but clearing site data removes them;
+they do not sync across devices or deployment domains.
 
 ## Element editing
 
-After reconstructing, click an element in the preview or choose it from the
-Edit elements list. Change position, dimensions, text/font, fill/text/border
-colors, border width, and corner radius where applicable. Small raster graphics
-support position and size changes only. Changes regenerate the preview and both
-ZIP exports automatically after a short debounce. Downloads are disabled while
-edits are pending or failed, with a retry action for failed updates.
+Select an element on the canvas or in Layers. Drag it to move, use its corner
+handle to resize, or edit position, dimensions, text, font size, colors, border,
+and corner radius in Properties. The workspace includes zoom/fit, a source
+reference, duplicate, delete, reset, and undo/redo. Ctrl/Cmd+Z undoes changes;
+Ctrl/Cmd+Shift+Z redoes them.
 
-Edits live in the current browser session and are cleared by refresh or replacing
-the screenshot. Containers do not move their children: coordinates remain
-absolute. The preview uses selection overlays outside a script-disabled iframe;
-editor outlines are not included in exported files.
+Changes regenerate the preview and HTML/CSS and React ZIP exports after a short
+debounce. Downloads remain disabled while rendering is pending or failed.
+HTML and CSS tabs are read-only; direct code editing remains future work.
+Containers do not move their children: exported coordinates remain absolute.
+Preview selection outlines are not included in exports.
 
-`POST /render` accepts the edited layout and validates IDs, dimensions, colors,
-and supported properties before regenerating HTML/CSS and React. It does not
-rerun OCR. The frontend build, 12 backend tests, browser editing/download/error
-checks, and a build of the downloaded edited React project pass locally.
+Reconstruction now estimates text color and font size from source pixels using
+an Arial-compatible reference font, alongside rounded-shape fitting and small
+graphic crops. Exact fonts, shadows, complex illustrations, responsive layout
+inference, and reliable reconstruction of arbitrary screens remain open work.
+
+Local validation for this update includes 14 backend tests, the frontend
+production build, and browser checks for navigation, editing, project
+persistence, downloads, and a mobile editor without horizontal overflow.
+The browser smoke script is frontend/test-editor.cjs and requires running local
+frontend and backend servers plus Playwright.
 
 See [the implementation plan](docs/PLAN.md) for decisions and acceptance criteria.
-
 ## Local feasibility benchmark
 
 ```sh
@@ -138,7 +143,7 @@ The login export passed a production build, browser rendering without errors,
 and editable-input checks. Its unfocused React and HTML previews are pixel-identical
 at 900 × 700. The second synthetic landing fixture exports five text elements;
 because that fixture has no card or button shapes, it does not validate complex
-landing-page reconstruction. Public deployment is still untested.
+landing-page reconstruction. The initial hosted upload/edit/export flow was verified by the owner.
 
 Rounded-control regression coverage is in `backend/test_shapes.py`. Run
 `python -m unittest test_shapes.py test_api.py` from `backend`. A browser-rendered
@@ -194,7 +199,7 @@ The root `render.yaml` is a deployment scaffold. Creating the service in your ow
 
 See [deployment instructions](docs/DEPLOYMENT.md) for the GitHub → Render/Vercel
 setup. Render now uses `backend/Dockerfile` to include OpenCV's Linux libraries.
-Docker is not installed locally, so its build and hosted behavior are unverified.
+Docker is not installed locally. The initial hosted Docker service was verified; this update also installs Liberation fonts for typography estimation.
 `frontend/vercel.json` specifies the Vite build/output configuration.
 
 Run `python backend/benchmark_service.py` to measure an isolated real HTTP server

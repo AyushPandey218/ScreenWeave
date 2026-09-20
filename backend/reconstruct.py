@@ -13,6 +13,7 @@ from rapidocr_onnxruntime import RapidOCR
 
 from app.baseline import inspect_image
 from app.shapes import detect_shapes
+from app.typography import text_style
 from react_export import write_react_project
 
 
@@ -41,6 +42,8 @@ def reconstruct(payload):
         x, y = points.min(axis=0)
         right, bottom = points.max(axis=0)
         texts.append({"x": int(x), "y": int(y), "width": int(right-x), "height": int(bottom-y), "text": value, "confidence": float(confidence)})
+    for text in texts:
+        text.update(text_style(rgb, text))
     boxes = detect_shapes(rgb, texts)
     elements = []
     consumed = set()
@@ -53,6 +56,8 @@ def reconstruct(payload):
         if kind in {"button", "image"}:
             element["text"] = " ".join(t["text"] for _, t in labels)
             consumed.update(i for i, _ in labels)
+        if kind == "button" and labels:
+            element.update({key: labels[0][1][key] for key in ("color", "font_size") if key in labels[0][1]})
         parents = [e for e in elements if e["type"] == "container" and contains(e, box)]
         element["parent_id"] = min(parents, key=lambda e: e["width"]*e["height"])["id"] if parents else None
         elements.append(element)

@@ -51,3 +51,14 @@ Compare image-processing and trained-detector baselines, coordinate and inferred
 ## Deferred
 
 Accounts, cloud history, drag-and-drop editing, automatic visual correction, complex dashboards, multi-page projects, and responsive inference. Do not expand these until the release contract is met.
+
+## Multi-page workspace update
+
+Implemented: separate application routes, project history in browser IndexedDB,
+example inputs, drag and resize, zoom, undo/redo, duplicate/delete/reset, source
+reference, and typography estimation. Browser history and editor route refresh
+are supported. Project history is local, without accounts or cloud storage.
+
+Still deferred: direct code editing, trained UI detection, responsive layout
+inference, cloud sync, and multiple reconstructed screens within one project.
+The earlier deferred drag-and-drop item is now implemented.

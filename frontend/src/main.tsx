@@ -1,127 +1,56 @@
-import { useEffect, useRef, useState } from 'react';
-import { createRoot } from 'react-dom/client';
+import {useEffect,useRef,useState,type MouseEvent} from 'react';
+import {createRoot} from 'react-dom/client';
+import Editor from './Editor';
+import {apiRequest,deleteProject,getProject,listProjects,navigate,saveProject,type Project} from './projects';
 import './styles.css';
-import { ElementEditor, type Element, type Layout } from './ElementEditor';
 
-type Result = {
-  layout: Layout;
-  html: string; css: string; exports: { html: string; react: string };
-};
-const API = (import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000').replace(/\/$/, '');
-
-function App() {
-  const [file, setFile] = useState<File | null>(null);
-  const [source, setSource] = useState('');
-  const [result, setResult] = useState<Result | null>(null);
-  const [draft, setDraft] = useState<Layout | null>(null);
-  const [selected, setSelected] = useState('');
-  const [updating, setUpdating] = useState(false);
-  const [editError, setEditError] = useState('');
-  const revision = useRef(0);
-  const [editRevision, setEditRevision] = useState(0);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
-  const [tab, setTab] = useState<'preview' | 'html' | 'css'>('preview');
-  const [drag, setDrag] = useState(false);
-  const input = useRef<HTMLInputElement>(null);
-  const preview = useRef<HTMLDivElement>(null);
-  const [previewWidth, setPreviewWidth] = useState(500);
-  const [previewHeight, setPreviewHeight] = useState(326);
-
-  useEffect(() => {
-    if (!draft || !editRevision) return;
-    const controller = new AbortController();
-    const current = revision.current;
-    const timer = setTimeout(async () => {
-      try {
-        const response = await fetch(`${API}/render`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(draft), signal: controller.signal });
-        if (!response.ok) throw new Error('Could not apply edits. Check the backend and try another change.');
-        const next = await response.json();
-        if (current === revision.current && !controller.signal.aborted) { setResult(next); setUpdating(false); setEditError(''); }
-      } catch (reason) {
-        if (!controller.signal.aborted && current === revision.current) { setUpdating(false); setEditError(reason instanceof Error ? reason.message : 'Edits could not be applied.'); }
-      }
-    }, 300);
-    return () => { clearTimeout(timer); controller.abort(); };
-  }, [draft, editRevision]);
-
-  function changeElement(patch: Partial<Element>) {
-    revision.current += 1;
-    setUpdating(true); setEditError('');
-    setDraft(previous => previous ? { ...previous, elements: previous.elements.map(e => e.id === selected ? { ...e, ...patch } : e) } : previous);
-    setEditRevision(n => n + 1);
-  }
-  function clearEdits() {
-    revision.current += 1; setDraft(null); setSelected(''); setEditRevision(0); setUpdating(false); setEditError('');
-  }
-
-  useEffect(() => {
-    if (!file) { setSource(''); return; }
-    const url = URL.createObjectURL(file); setSource(url);
-    return () => URL.revokeObjectURL(url);
-  }, [file]);
-  useEffect(() => {
-    if (!preview.current) return;
-    const observer = new ResizeObserver(([entry]) => { setPreviewWidth(entry.contentRect.width); setPreviewHeight(entry.contentRect.height); });
-    observer.observe(preview.current); return () => observer.disconnect();
-  }, [tab, result]);
-
-  function select(candidate?: File) {
-    if (!candidate || busy) return;
-    clearEdits(); setResult(null); setError(''); setFile(null);
-    if (!['image/png', 'image/jpeg'].includes(candidate.type)) { setError('Choose a PNG or JPEG screenshot.'); return; }
-    if (candidate.size > 5 * 1024 * 1024) { setError('Your screenshot must be smaller than 5 MiB.'); return; }
-    setFile(candidate); setTab('preview');
-  }
-
-  async function generate() {
-    if (!file || busy) return;
-    clearEdits(); setBusy(true); setError(''); setResult(null);
-    try {
-      const response = await fetch(`${API}/reconstruct`, { method: 'POST', headers: { 'Content-Type': file.type }, body: file, signal: AbortSignal.timeout(120000) });
-      if (!response.ok) {
-        const body = await response.json().catch(() => null);
-        throw new Error(typeof body?.detail === 'string' ? body.detail : `Processing failed (${response.status}). Please try again.`);
-      }
-      const next: Result = await response.json(); setResult(next); setDraft(next.layout); setSelected(next.layout.elements[0]?.id ?? ''); setTab('preview');
-    } catch (reason) {
-      setError(reason instanceof Error && reason.name === 'TimeoutError' ? 'The request timed out. The backend may be starting up; try again shortly.' : reason instanceof TypeError ? 'Cannot reach the backend. Check that the service is running and allows this frontend address.' : reason instanceof Error ? reason.message : 'Something went wrong. Please try again.');
-    } finally { setBusy(false); }
-  }
-
-  function download(kind: 'html' | 'react') {
-    if (!result || updating || editError) return;
-    const bytes = Uint8Array.from(atob(result.exports[kind]), c => c.charCodeAt(0));
-    const url = URL.createObjectURL(new Blob([bytes], { type: 'application/zip' }));
-    const link = document.createElement('a'); link.href = url; link.download = `screenweave-${kind}.zip`; link.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-  }
-  const scale = result ? Math.min(1, previewWidth / result.layout.viewport.width, previewHeight / result.layout.viewport.height) : 1;
-  const srcDoc = result?.html.replace('<link rel="stylesheet" href="styles.css">', `<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'none'"><style>${result.css}</style>`);
-
-  return <>
-    <header><a className="brand" href="/" aria-label="ScreenWeave home"><span className="mark">▧</span> ScreenWeave</a><span className="badge">EXPERIMENTAL BUILD</span></header>
-    <main className="workspace">
-      <div className="intro"><div><p className="eyebrow">FROM REFERENCE TO REAL CODE</p><h1>A screenshot.<br /><span>A starting point.</span></h1><p className="subtitle">Reconstruct an interface, inspect the result, and take the code with you.</p></div><div className="step-note"><strong>01 / RECONSTRUCT</strong><span>Start with a simple login or landing page.</span></div></div>
-      <div className="toolbar"><div className="project-title">Untitled interface <span>{file ? file.name : 'No screenshot selected'}</span></div><div className="export-actions"><button disabled={!result || busy || updating || !!editError} onClick={() => download('html')}>↓ HTML / CSS</button><button disabled={!result || busy || updating || !!editError} onClick={() => download('react')}>↓ React project</button></div></div>
-      <div className="panels">
-        <section className="panel"><div className="panel-heading"><h2><span>01</span> Original screenshot</h2><button className="text-button" disabled={busy} onClick={() => input.current?.click()}>{file ? 'Replace' : 'Browse'}</button></div>
-          <input ref={input} type="file" accept="image/png,image/jpeg" hidden onChange={e => { select(e.target.files?.[0]); e.target.value = ''; }} />
-          <div className={`source-area ${drag ? 'dragging' : ''}`} onDragOver={e => { e.preventDefault(); if (!busy) setDrag(true); }} onDragLeave={() => setDrag(false)} onDrop={e => { e.preventDefault(); setDrag(false); select(e.dataTransfer.files[0]); }}>
-            {source ? <img className="source-image" src={source} alt="Uploaded screenshot" /> : <button className="upload" onClick={() => input.current?.click()}><span className="upload-icon">↥</span><strong>Drop your screenshot here</strong><span>or click to browse files</span><small>PNG or JPG · up to 5 MiB · 4 megapixels</small></button>}
-          </div>
-          <div className="source-footer"><span>{file ? `${(file.size / 1024).toFixed(0)} KB · Ready to reconstruct` : 'Your reference stays yours. Uploads are not saved.'}</span><button className="primary" disabled={!file || busy} onClick={generate}>{busy ? 'Reconstructing…' : 'Reconstruct →'}</button></div>
-        </section>
-        <section className="panel"><div className="panel-heading"><h2><span>02</span> Reconstruction</h2><div className="tabs" aria-label="Output view">{(['preview', 'html', 'css'] as const).map(t => <button key={t} aria-pressed={tab === t} onClick={() => setTab(t)}>{t === 'preview' ? 'Preview' : t.toUpperCase()}</button>)}</div></div>
-          {result ? tab === 'preview' ? <div className="preview-area" ref={preview}><div className="preview-stage" style={{ height: result.layout.viewport.height * scale, width: result.layout.viewport.width * scale }}><iframe title="Reconstructed website" sandbox="" srcDoc={srcDoc} style={{ width: result.layout.viewport.width, height: result.layout.viewport.height, transform: `scale(${scale})`, transformOrigin: 'top left' }} />{result.layout.elements.map(e => <button key={e.id} className={`element-hit ${selected === e.id ? 'selected' : ''}`} aria-label={`Select ${e.type} ${e.text || e.id}`} title={`${e.type}: ${e.text || e.id}`} onClick={() => setSelected(e.id)} style={{ left: e.x * scale, top: e.y * scale, width: e.width * scale, height: e.height * scale }} />)}</div></div> : <pre className="code"><code>{tab === 'html' ? result.html : result.css}</code></pre> : <div className="empty-output" aria-live="polite"><div className={busy ? 'placeholder-grid working' : 'placeholder-grid'}><i /><i /><i /></div><strong>{busy ? 'Finding text and interface elements' : 'Your next interface starts here'}</strong><p>{busy ? 'The first request may take longer while the service starts.' : 'Upload a reference to generate a live preview and exportable code.'}</p></div>}
-          <div className="result-footer"><span className={result ? 'status-dot ready' : 'status-dot'} />{result ? `${result.layout.elements.length} elements · ${result.layout.viewport.width} × ${result.layout.viewport.height} · Fixed viewport` : busy ? 'Processing your screenshot' : 'Waiting for a screenshot'}</div>
-        </section>
-      </div>
-      {draft && <ElementEditor layout={draft} selected={selected} onSelect={setSelected} onChange={changeElement} status={updating ? 'Applying changes…' : editError ? 'Changes not applied' : 'Preview and exports up to date'} />}
-      {editError && <div className="error" role="alert">{editError}<button onClick={() => { setUpdating(true); setEditError(''); setEditRevision(n => n + 1); }}>Retry edits</button></div>}
-      {error && <div className="error" role="alert">{error}</div>}
-      <footer className="notes"><span>Built for a first draft. Refined by you.</span><p>Select an element to refine its properties. Edits update both exports. Exports contain static UI, without application logic. Changes last for this session.</p></footer>
-    </main>
-  </>;
+function Link({to,children,className=''}:{to:string;children:React.ReactNode;className?:string}){
+ return <a className={className} href={to} onClick={(e:MouseEvent)=>{if(e.button===0&&!e.metaKey&&!e.ctrlKey&&!e.shiftKey){e.preventDefault();navigate(to);}}}>{children}</a>;
 }
-createRoot(document.getElementById('root')!).render(<App />);
+function usePath(){const [path,setPath]=useState(location.pathname);useEffect(()=>{const update=()=>setPath(location.pathname);window.addEventListener('popstate',update);return()=>window.removeEventListener('popstate',update);},[]);return path;}
+function Mockup(){return <div className="hero-demo" aria-label="Illustration of a screenshot becoming an editable page"><div className="demo-chrome"><i/><i/><i/><span>YOUR NEXT INTERFACE</span></div><div className="demo-grid"><div className="demo-layers"><small>LAYERS</small><p>▢ Navigation</p><p className="demo-selected">T Welcome back</p><p>▢ Email field</p><p>▢ Continue</p></div><div className="demo-canvas"><div className="demo-login"><span className="demo-logo">w.</span><h3>Welcome back.</h3><p>A little less setup. A little more creating.</p><div className="fake-input">you@example.com</div><div className="fake-input">••••••••••</div><div className="fake-button">Continue →</div></div><span className="demo-cursor">↖ You, in control</span></div></div><div className="demo-bottom"><span>Screenshot → editable interface</span><strong>React + HTML</strong></div></div>;}
+function Home(){return <><section className="hero page"><div className="hero-copy"><p className="eyebrow">YOUR REFERENCE. YOUR NEXT PROJECT.</p><h1>Good ideas deserve<br/>a <em>head start.</em></h1><p className="lede">Turn a screenshot into an editable interface. Shape the details, make it yours, and leave with real code.</p><div className="actions"><Link className="button primary large" to="/new">Create a project <span>↗</span></Link><Link className="button subtle large" to="/examples">Explore examples →</Link></div><p className="small muted">No account needed. Your projects stay in this browser.</p></div><Mockup/></section><section className="workflow page"><div className="section-title"><p className="eyebrow">A SHORTER PATH TO YOUR FIRST DRAFT</p><h2>From inspiration to iteration.</h2></div><div className="feature-grid">{[['01','Bring a reference','Start with a screenshot of a login screen, form, or simple landing page.'],['02','Make your adjustments','Move, resize, restyle, and refine the elements on your canvas.'],['03','Take the code with you','Download a static HTML/CSS website or a React + TypeScript project.']].map(([n,t,d])=><article key={n}><span className="number">{n}</span><h3>{t}</h3><p>{d}</p></article>)}</div></section><section className="bottom-cta page"><div><p className="eyebrow">BUILT FOR EXPERIMENTING</p><h2>Your next idea starts with a screenshot.</h2></div><Link className="button primary" to="/new">Start creating ↗</Link></section></>;}
+function Projects(){
+ const [projects,setProjects]=useState<Project[]>([]),[error,setError]=useState(''),[loading,setLoading]=useState(true),[query,setQuery]=useState(''),[editing,setEditing]=useState<string|null>(null),[name,setName]=useState('');
+ function refresh(){listProjects().then(p=>{setProjects(p.sort((a,b)=>b.updatedAt-a.updatedAt));setError('');}).catch(e=>setError(e.message)).finally(()=>setLoading(false));}
+ useEffect(refresh,[]);
+ async function rename(p:Project){if(!name.trim())return;try{await saveProject({...p,name:name.trim().slice(0,100),updatedAt:Date.now()});setEditing(null);refresh();}catch(e){setError(String(e));}}
+ async function remove(p:Project){if(!confirm('Delete “'+p.name+'” from this browser? This cannot be undone.'))return;try{await deleteProject(p.id);refresh();}catch(e){setError(String(e));}}
+ const visible=projects.filter(p=>p.name.toLowerCase().includes(query.toLowerCase()));
+ return <main className="page"><div className="page-heading"><div><p className="eyebrow">YOUR CREATIVE SPACE</p><h1>Projects<span className="count">{projects.length}</span></h1><p className="muted">Pick up where you left off, or start with something new.</p></div><Link className="button primary" to="/new">＋ New project</Link></div><div className="project-tools"><label className="search"><span>⌕</span><input aria-label="Search projects" placeholder="Search your projects" value={query} onChange={e=>setQuery(e.target.value)}/></label><span className="small muted">Saved on this device · newest first</span></div>{error&&<div className="error" role="alert">{error}</div>}{loading?<p>Loading projects…</p>:visible.length?<div className="project-grid">{visible.map(p=><article className="project-card" key={p.id}><Link to={'/editor/'+p.id} className="thumbnail"><img src={p.source} alt={p.name+' reference'}/><span className="open-project">Open editor ↗</span></Link><div className="project-info">{editing===p.id?<form onSubmit={e=>{e.preventDefault();void rename(p);}}><input aria-label="Project name" value={name} maxLength={100} onChange={e=>setName(e.target.value)} autoFocus/><button>Save</button><button type="button" onClick={()=>setEditing(null)}>Cancel</button></form>:<><Link to={'/editor/'+p.id}><h3>{p.name}</h3></Link><p>{p.layout.elements.length} elements · {new Date(p.updatedAt).toLocaleDateString()}</p><div className="card-actions"><button onClick={()=>{setEditing(p.id);setName(p.name);}}>Rename</button><button className="danger" onClick={()=>void remove(p)}>Delete</button></div></>}</div></article>)}</div>:<div className="empty-state"><span className="empty-symbol">▧</span><h2>{query?'No matching projects':'A fresh canvas for your ideas.'}</h2><p>{query?'Try a different search.':'Create your first project or explore one of our sample screens.'}</p><Link className="button primary" to={query?'/projects':'/new'}>{query?'All projects':'Create a project →'}</Link></div>}<p className="storage-note">Projects are stored in this browser, not a cloud account. Clearing site data removes them. Export your work to keep a copy.</p></main>;
+}
+const examples=[{id:'rounded',name:'Soft corners',tag:'LOGIN · ROUNDED CONTROLS',file:'/examples/rounded.png',description:'Pill inputs, a rounded card, and a curved graphic.'},{id:'login',name:'The essentials',tag:'LOGIN · SIMPLE STRUCTURE',file:'/examples/login.png',description:'A clean starting point for trying text and style edits.'}];
+function Examples(){return <main className="page"><div className="page-heading"><div><p className="eyebrow">A LITTLE INSPIRATION</p><h1>Try it. Make it yours.</h1><p className="muted">Two synthetic references to explore the reconstruction workflow.</p></div></div><div className="example-grid">{examples.map(e=><article className="example-card" key={e.id}><div className="example-image"><img src={e.file} alt={e.name}/></div><div><p className="eyebrow">{e.tag}</p><h2>{e.name}</h2><p className="muted">{e.description}</p><Link className="button" to={'/new?example='+e.id}>Use this example ↗</Link></div></article>)}</div><p className="storage-note">Examples use the same reconstruction service as your own uploads. Results are starting points, not pixel-perfect copies.</p></main>;}
+function NewProject(){
+ const [file,setFile]=useState<File|null>(null),[source,setSource]=useState(''),[name,setName]=useState(''),[error,setError]=useState(''),[busy,setBusy]=useState(false),[drag,setDrag]=useState(false);
+ const input=useRef<HTMLInputElement>(null),controller=useRef<AbortController|null>(null);
+ function choose(f?:File){if(!f||busy)return;setError('');setFile(null);if(!['image/png','image/jpeg'].includes(f.type)){setError('Choose a PNG or JPEG image.');return;}if(f.size>5*1024*1024){setError('Choose an image under 5 MiB.');return;}setFile(f);setName(f.name.replace(/\.[^.]+$/,'').slice(0,100));}
+ useEffect(()=>{if(!file){setSource('');return;}const url=URL.createObjectURL(file);setSource(url);return()=>URL.revokeObjectURL(url);},[file]);
+ useEffect(()=>{const c=new AbortController();const example=examples.find(e=>e.id===new URLSearchParams(location.search).get('example'));if(example)fetch(example.file,{signal:c.signal}).then(r=>{if(!r.ok)throw new Error('Example unavailable');return r.blob();}).then(b=>{if(!c.signal.aborted)choose(new File([b],example.name+'.png',{type:'image/png'}));}).catch(()=>{if(!c.signal.aborted)setError('Could not load example. Please try again.');});return()=>{c.abort();controller.current?.abort();};},[]);
+ async function create(){
+  if(!file||!name.trim()||busy)return;setBusy(true);setError('');const c=new AbortController();controller.current=c;const timeout=setTimeout(()=>c.abort(),180000);
+  try{
+   const bitmap=await createImageBitmap(file);const pixels=bitmap.width*bitmap.height;bitmap.close();if(pixels>4000000)throw new Error('Choose a screenshot with at most 4 megapixels.');
+   const result=await apiRequest('/reconstruct',file,file.type,c.signal);
+   const data=await new Promise<string>((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result as string);reader.onerror=()=>reject(new Error('Could not read screenshot'));reader.readAsDataURL(file);});
+   if(c.signal.aborted)return;
+   const project:Project={id:crypto.randomUUID(),name:name.trim(),source:data,layout:result.layout,original:result.layout,updatedAt:Date.now()};
+   await saveProject(project);if(!c.signal.aborted)navigate('/editor/'+project.id);
+  }catch(e){if(c.signal.aborted)setError('Request stopped or timed out. Please try again.');else setError(e instanceof TypeError?'Cannot reach the reconstruction service. It may be waking up; try again shortly.':e instanceof Error?e.message:'Could not create project.');}finally{clearTimeout(timeout);setBusy(false);}
+ }
+ return <main className="page new-page"><Link className="back-link" to="/projects">← All projects</Link><p className="eyebrow">SOMETHING NEW STARTS HERE</p><h1>Bring your reference.</h1><p className="muted">Upload a screenshot. We’ll turn it into your first editable draft.</p><div className="new-grid"><section className={'upload-card '+(drag?'dragging':'')} onDragOver={e=>{e.preventDefault();setDrag(true);}} onDragLeave={()=>setDrag(false)} onDrop={e=>{e.preventDefault();setDrag(false);choose(e.dataTransfer.files[0]);}}><input ref={input} type="file" accept="image/png,image/jpeg" hidden onChange={e=>{choose(e.target.files?.[0]);e.target.value='';}}/>{source?<><img className="upload-preview" src={source} alt="Selected screenshot"/><button disabled={busy} onClick={()=>input.current?.click()}>Replace screenshot</button></>:<button className="upload-drop" onClick={()=>input.current?.click()}><span>↥</span><strong>Drop a screenshot here</strong><p>or browse your files</p><small>PNG or JPG · 5 MiB max · 4 megapixels</small></button>}</section><aside className="new-details"><h2>A few details.</h2><label>Project name<input aria-label="Project name" placeholder="My next interface" value={name} maxLength={100} disabled={busy} onChange={e=>setName(e.target.value)}/></label><div className="tip"><strong>Start simple.</strong><p>Login screens, forms, and clear borders work best. Complex graphics and tiny text may need adjustments.</p></div><button className="primary large" disabled={!file||!name.trim()||busy} onClick={()=>void create()}>{busy?'Reconstructing…':'Create project →'}</button><p className="small muted" role="status">{busy?'Finding text and shapes. The free service may need time to wake up.':'Your reference and edits will be saved in this browser.'}</p>{error&&<div className="error" role="alert">{error}</div>}</aside></div></main>;
+}
+function Help(){return <main className="page help-page"><p className="eyebrow">A LITTLE GUIDANCE</p><h1>Make the most of ScreenWeave.</h1><p className="lede">A first draft you can shape, not a promise of a perfect copy.</p>{[
+ ['What can I reconstruct?','Start with PNG or JPEG screenshots under 5 MiB and 4 megapixels. Simple forms and landing pages work best. OCR and shape heuristics approximate the visible interface.'],
+ ['How do I edit?','Choose a layer or click an element. Drag to move it; drag the bottom-right handle to resize. Use the properties panel for exact dimensions, text, colors, borders, and corners. Moving a container does not move its children.'],
+ ['Can I undo changes?','Use Undo and Redo or Ctrl+Z and Ctrl+Shift+Z. Duplicate creates a copy; Delete removes a layer. Reset restores the selected original element. Undo history is kept for up to 50 edits in the current editor session.'],
+ ['Where are my projects saved?','Projects are saved in this browser on this device using IndexedDB. They are not synced to an account. Clearing browser data removes them. Private browsing may not preserve them. Download exports to keep independent copies.'],
+ ['What is included in an export?','HTML/CSS produces a static page. React export produces a Vite and TypeScript project. Both contain your edits. Authentication, responsive behavior, and other backend logic must be added separately.'],
+ ['Why are some details different?','Fonts, shape grouping, icons, and spacing are inferred. Small icons may be preserved as image crops, not editable vectors. Use the editor to correct the result.'],
+ ['Why does processing take time?','The free backend can sleep when unused. Initial requests can take longer. If processing fails, wait a moment and retry.']
+ ].map(([q,a])=><details key={q}><summary>{q}<span>＋</span></summary><p>{a}</p></details>)}</main>;}
+function EditorPage({id}:{id:string}){const [project,setProject]=useState<Project|null>(null),[error,setError]=useState('');useEffect(()=>{let active=true;getProject(id).then(p=>{if(active){if(p)setProject(p);else setError('This project is not saved in this browser.');}}).catch(e=>{if(active)setError(e.message);});return()=>{active=false;};},[id]);return error?<main className="page empty-state"><h1>Project unavailable</h1><p>{error}</p><Link className="button primary" to="/projects">Back to projects</Link></main>:project?<Editor key={id} project={project}/>:<main className="page">Opening your project…</main>;}
+function App(){const path=usePath(),isEditor=path.startsWith('/editor/');useEffect(()=>{window.scrollTo(0,0);document.title=(isEditor?'Editor':path==='/projects'?'Projects':path==='/new'?'New project':path==='/examples'?'Examples':path==='/help'?'Help':'Screenshot to editable website')+' · ScreenWeave';},[path,isEditor]);
+ return <><header className="site-header"><Link className="brand" to="/"><span className="mark">▧</span>ScreenWeave<span className="beta">BETA</span></Link><nav aria-label="Main navigation">{[['/projects','Projects'],['/examples','Examples'],['/help','Help']].map(([to,label])=><Link key={to} to={to} className={path===to?'active':''}>{label}</Link>)}</nav><Link className="button primary nav-create" to="/new">＋ New project</Link></header>{isEditor?<EditorPage key={path} id={path.slice(8)}/>:path==='/'?<Home/>:path==='/projects'?<Projects/>:path==='/new'?<NewProject/>:path==='/examples'?<Examples/>:path==='/help'?<Help/>:<main className="page empty-state"><h1>Page not found.</h1><Link to="/">Return home →</Link></main>}{!isEditor&&<footer className="site-footer"><Link className="brand" to="/">▧ ScreenWeave</Link><span>From a spark of inspiration to a working first draft.</span><Link to="/help">Made to be yours ↗</Link></footer>}</>;
+}
+createRoot(document.getElementById('root')!).render(<App/>);

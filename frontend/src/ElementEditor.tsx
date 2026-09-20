@@ -1,7 +1,7 @@
 export type Element = {
   id: string; type: string; x: number; y: number; width: number; height: number;
   text?: string; color?: string; background?: string; border?: string;
-  radius?: number; border_width?: number; font_size?: number; geometry?: string;
+  parent_id?: string | null; radius?: number; border_width?: number; font_size?: number; geometry?: string;
 };
 export type Layout = { version: number; background: string; viewport: { width: number; height: number }; elements: Element[]; limitations: string[] };
 
