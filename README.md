@@ -225,3 +225,22 @@ The layout supports at most 500 elements.
 
 Run frontend/test-tools.cjs with Playwright and local servers to check these
 features, exports, reload persistence, and mobile overflow.
+
+### Project backups and alignment
+
+Use **Project backup** in the editor to download a versioned
+.screenweave.json file containing the reference, current layout, and original
+layout. **Import project** on the Projects page validates the file and restores
+a new copy without overwriting existing projects. Backups are limited to 25 MiB;
+each layout must fit the existing 5 MiB rendering limit. Undo history and
+editor preferences are not included. Backup and import work without the API;
+rendering a restored project still requires the backend.
+
+Align the selected element to canvas edges or centers using the Properties
+buttons. Enable **Snap to 8 px grid** for drag/resize snapping. Arrow keys on a
+focused canvas element move by one pixel; Shift+arrow moves by ten pixels.
+Alignment, snapping, and nudges participate in undo/redo. Containers still move
+independently of their children.
+
+frontend/test-backup.cjs covers backup/import, invalid files, alignment, nudges,
+snapping, undo, and mobile layout using local servers and Playwright.

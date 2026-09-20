@@ -164,3 +164,14 @@ summary:focus-visible{outline:3px solid #8aaf4e;outline-offset:5px}
 .artboard.hide-outlines .resize-handle{display:none}
 @media(max-width:800px){.insert-grid{grid-template-columns:1fr}.comparison-toolbar{padding:9px;gap:9px}}
 @media(max-width:520px){.insert-grid{grid-template-columns:repeat(5,minmax(0,1fr))}.insert-grid button{flex-direction:column;justify-content:center;padding:8px 3px;font-size:9px;gap:4px}.insert-tools .sidebar-heading{padding:10px 15px}.insert-note{margin-top:6px}.comparison-note{width:100%}}
+
+.project-heading-actions{display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap}
+.import-project{max-width:250px}
+.import-error{font-size:11px;line-height:1.5;color:#934b3b;margin:8px 0 0}
+.alignment-tools{padding:0 12px 15px;border-bottom:1px solid var(--line);margin-bottom:14px}
+.alignment-tools>span{display:block;font-size:10px;color:#536a48;margin:5px 0 10px}
+.alignment-tools>div{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+.alignment-tools button{padding:7px 4px;font-size:10px}
+.alignment-tools small{display:block;font-size:9px;color:#687b5c;margin-top:10px;line-height:1.6}
+@media(max-width:800px){.studio-top>.actions{flex-wrap:wrap}.studio-top>.actions button{white-space:nowrap}.alignment-tools>div{max-width:400px}}
+@media(max-width:520px){.studio-top .actions button{flex:1 1 40%}}
