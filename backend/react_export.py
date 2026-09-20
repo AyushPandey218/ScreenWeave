@@ -4,7 +4,7 @@ from pathlib import Path
 from zipfile import ZIP_DEFLATED, ZipFile
 
 
-def write_react_project(layout: dict, css: str, output: Path) -> None:
+def write_react_project(layout: dict, css: str, output: Path, tailwind: bool = False) -> None:
     files = {
         "package.json": json.dumps({
             "name": "screenweave-export", "version": "0.1.0", "private": True,
@@ -51,6 +51,9 @@ export default function App() {
         "README.md": "# ScreenWeave React export\n\nRequires Node.js 20.19+ or 22.12+. Run `npm install`, then `npm run dev`. Run `npm run build` for a production build.\n\nEdit `src/layout.json`, `src/App.tsx`, and `src/styles.css`. This is a static reconstruction at the original viewport size. Authentication and other application logic are not included. Text is rendered through React escaping, not raw HTML.\n",
         ".gitignore": "node_modules/\ndist/\n",
     }
+    if tailwind:
+        from tailwind_export import apply_tailwind
+        apply_tailwind(layout, files)
     output.mkdir(parents=True, exist_ok=True)
     for name, content in files.items():
         path = output / name

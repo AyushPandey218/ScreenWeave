@@ -1,0 +1,47 @@
+const {chromium}=require(process.argv[2]||'playwright');
+const assert=require('node:assert/strict'),path=require('node:path');
+(async()=>{const browser=await chromium.launch({channel:'msedge',headless:true});try{
+ const p=await browser.newPage({viewport:{width:1440,height:1100}}),errors=[];
+ p.on('pageerror',e=>errors.push(e.message));
+ await p.goto('http://127.0.0.1:5173/new?example=rounded');await p.locator('.upload-preview').waitFor();
+ await p.getByRole('button',{name:'Create project →',exact:true}).click();
+ const ready=()=>p.getByRole('status').filter({hasText:'Preview and exports up to date'}).waitFor({timeout:120000});await ready();
+ await p.getByRole('button',{name:'Select button Sign in',exact:true}).click();
+ const rect={};for(const [key,label] of [['x','X position'],['y','Y position'],['width','Width'],['height','Height']])rect[key]=Number(await p.getByLabel(label,{exact:true}).inputValue());
+ await p.getByLabel('Element text',{exact:true}).fill('Edited button');await ready();
+ await p.getByRole('button',{name:'Add text',exact:true}).click();await ready();
+ await p.getByLabel('Element text',{exact:true}).fill('Outside preserved');
+ await p.getByLabel('X position',{exact:true}).fill('0');await p.getByLabel('Y position',{exact:true}).fill('0');await ready();
+ const before=await p.locator('.element-hit').count();
+ await p.getByRole('button',{name:'Reconstruct region',exact:true}).click();
+ for(const [key,value] of Object.entries({x:Math.max(0,rect.x-12),y:Math.max(0,rect.y-12),width:rect.width+24,height:rect.height+24}))await p.getByLabel('Region '+key,{exact:true}).fill(String(value));
+ await p.getByRole('button',{name:'Reconstruct selection',exact:true}).click();
+ await p.getByRole('button',{name:'Apply region',exact:true}).waitFor({timeout:120000});
+ await p.getByRole('button',{name:'Discard result',exact:true}).click();
+ await p.frameLocator('iframe[title="Reconstructed website"]').getByRole('button',{name:'Edited button',exact:true}).waitFor();
+ assert.equal(await p.locator('.element-hit').count(),before);
+ await p.getByRole('button',{name:'Reconstruct selection',exact:true}).click();
+ await p.getByRole('button',{name:'Apply region',exact:true}).waitFor({timeout:120000});
+ await p.screenshot({path:'reports/region-preview.png',fullPage:true});
+ await p.getByRole('button',{name:'Apply region',exact:true}).click();await ready();
+ await p.frameLocator('iframe[title="Reconstructed website"]').getByText('Outside preserved',{exact:true}).waitFor();
+ assert.equal(await p.frameLocator('iframe[title="Reconstructed website"]').getByRole('button',{name:'Edited button',exact:true}).count(),0);
+ await p.getByRole('button',{name:'Undo',exact:true}).click();await ready();
+ await p.frameLocator('iframe[title="Reconstructed website"]').getByRole('button',{name:'Edited button',exact:true}).waitFor();
+ assert.equal(await p.locator('.element-hit').count(),before);
+ await p.getByRole('button',{name:'Redo',exact:true}).click();await ready();
+ for(const [name,file] of [['↓ React + Tailwind','selective-tailwind.zip'],['↓ HTML / CSS','selective-html.zip']]){
+ const event=p.waitForEvent('download');await p.getByRole('button',{name,exact:true}).click();await(await event).saveAs(path.resolve('reports',file));}
+ await p.reload();await ready();await p.frameLocator('iframe').getByText('Outside preserved',{exact:true}).waitFor();
+ await p.getByRole('button',{name:'Reconstruct region',exact:true}).click();
+ await p.setViewportSize({width:390,height:844});
+ assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+ await p.screenshot({path:'reports/region-mobile.png',fullPage:true});
+ await p.route('**/reconstruct',async route=>{await new Promise(resolve=>setTimeout(resolve,1000));await route.abort();});
+ await p.getByRole('button',{name:'Reconstruct selection',exact:true}).click();
+ await p.getByRole('button',{name:'Cancel request',exact:true}).click();
+ await p.getByRole('button',{name:'Reconstruct region',exact:true}).click();
+ assert.equal(await p.getByRole('button',{name:'Reconstruct selection',exact:true}).isEnabled(),true);
+ await p.getByRole('button',{name:'Close region tool',exact:true}).click();
+ assert.deepEqual(errors,[]);console.log('PASS: region preview/apply/discard/cancel, outside edits preserved, undo/redo, persistence, Tailwind download, mobile.');
+}finally{await browser.close();}})().catch(e=>{console.error(e);process.exit(1)});

@@ -41,7 +41,7 @@ class ApiTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         result = response.json()
         self.assertEqual(sum(e['type'] == 'input' for e in result['layout']['elements']), 2)
-        for key, expected in [('html', 'index.html'), ('react', 'src/App.tsx')]:
+        for key, expected in [('html', 'index.html'), ('react', 'src/App.tsx'), ('tailwind', 'src/classes.ts')]:
             with ZipFile(io.BytesIO(base64.b64decode(result['exports'][key]))) as archive:
                 self.assertIn(expected, archive.namelist())
         self.assertFalse(job_lock.locked())

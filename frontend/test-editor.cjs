@@ -1,5 +1,6 @@
 const {chromium}=require(process.argv[2]||'playwright');
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
+process.chdir(path.resolve(__dirname,'..'));
 fs.mkdirSync('reports',{recursive:true});
 (async()=>{
  const browser=await chromium.launch({channel:'msedge',headless:true});

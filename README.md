@@ -244,3 +244,30 @@ independently of their children.
 
 frontend/test-backup.cjs covers backup/import, invalid files, alignment, nudges,
 snapping, undo, and mobile layout using local servers and Playwright.
+
+### Selective reconstruction and Tailwind export
+
+In Canvas, choose **Reconstruct region**, then draw a rectangle or enter its
+bounds. **Reconstruct selection** sends only that crop of the original screenshot
+to the existing bounded reconstruction endpoint. The result appears as an
+isolated preview; **Apply region** replaces only elements fully enclosed by the
+selection. Elements crossing its boundary are retained. IDs and parent links
+are remapped, and positions are offset back into screenshot coordinates.
+Discard/cancel leaves the layout unchanged; applying participates in undo/redo,
+autosave, backups, and all exports. The original reset baseline stays unchanged.
+A crop can improve small details but is not guaranteed to outperform the
+full-image result.
+
+**React + Tailwind** downloads a Vite/React/TypeScript project using Tailwind 4
+and its Vite plugin. Full utility names are emitted in src/classes.ts so the
+compiler can discover arbitrary pixel/color values. Edit that file for styles
+and geometry, and src/layout.json for content. Preflight is omitted to match
+the native controls in the HTML export. This remains a fixed-size layout;
+responsive inference is not included.
+
+Validation: 15 backend tests, the frontend and downloaded Tailwind production
+builds, browser comparison of computed styles against HTML, and region
+apply/discard/cancel, preservation of outside edits, undo/redo, reload, and mobile
+checks. Run frontend/test-region.cjs with Playwright and local servers.
+frontend/test-region-merge.mjs exercises merge edge cases using Node with native
+TypeScript stripping (tested on Node 24).

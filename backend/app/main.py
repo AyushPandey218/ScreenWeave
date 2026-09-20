@@ -42,7 +42,7 @@ def capabilities() -> dict:
     return {
         "stage": "experimental-reconstruction",
         "reconstruction_available": True,
-        "available_exports": ["html-css", "react-typescript"],
+        "available_exports": ["html-css", "react-typescript", "react-tailwind"],
         "max_upload_bytes": MAX_BYTES,
     }
 
@@ -65,6 +65,8 @@ def package_layout(layout: dict) -> dict:
         folder = Path(temporary) / "react"
         write_react_project(layout, css, folder)
         react_zip = (Path(temporary) / "react.zip").read_bytes()
+        write_react_project(layout, css, Path(temporary) / "tailwind", tailwind=True)
+        tailwind_zip = (Path(temporary) / "tailwind.zip").read_bytes()
     return {
         "layout": layout,
         "html": document,
@@ -72,6 +74,7 @@ def package_layout(layout: dict) -> dict:
         "exports": {
             "html": base64.b64encode(html_zip.getvalue()).decode("ascii"),
             "react": base64.b64encode(react_zip).decode("ascii"),
+            "tailwind": base64.b64encode(tailwind_zip).decode("ascii"),
         },
     }
 
