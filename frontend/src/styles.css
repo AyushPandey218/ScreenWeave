@@ -278,3 +278,23 @@ summary:focus-visible{outline:3px solid #8aaf4e;outline-offset:5px}
  .site-header .nav-create{padding:11px 14px}
 }
 @media(prefers-reduced-transparency:reduce){.site-header{background:#fdfefb;-webkit-backdrop-filter:none;backdrop-filter:none}}
+
+/* Canvas actions sit together; view preferences stay out of the working area. */
+.canvas-tools{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:9px 14px;border-bottom:1px solid var(--line);background:#fff;flex-shrink:0;position:relative}
+.canvas-tool-actions{display:contents}
+.canvas-tools button{font-size:11px;padding:8px 12px;border-radius:9px}
+.canvas-tools button[aria-pressed=true],.canvas-tools button[aria-expanded=true]{background:#eaf2df;border-color:#b3c69d;color:#304d26}
+.studio-body .canvas-tools .region-tools{display:contents}
+.canvas-options{margin-left:auto;position:relative}
+.canvas-options summary{display:flex;align-items:center;gap:15px;list-style:none;cursor:pointer;font-size:11px;color:#52665c;padding:9px 11px;border-radius:9px}
+.canvas-options summary::-webkit-details-marker{display:none}
+.canvas-options summary:hover,.canvas-options[open] summary{background:#f0f4ec}
+.canvas-options-panel{position:absolute;right:0;top:calc(100% + 8px);width:220px;padding:17px;background:#fff;border:1px solid var(--line);border-radius:13px;box-shadow:0 10px 35px #172e3020;z-index:20;display:grid;gap:16px}
+.canvas-tools .comparison-toolbar{order:3;width:100%;border:0;border-top:1px solid var(--line);padding:10px 0 1px;background:none;gap:14px}
+.canvas-tools .region-panel{order:4;width:100%;max-height:180px;overflow:auto;margin:0;padding:12px;background:#f7f9f3;border:1px solid var(--line);border-radius:10px}
+.studio-body .canvas-status{min-height:45px;height:auto;display:flex;align-items:center;gap:8px;padding:7px 14px;flex-wrap:wrap}
+.canvas-status .canvas-dimensions{margin-left:auto}
+.canvas-status .zoom{margin-left:10px;display:flex;align-items:center;gap:5px}
+.canvas-status .zoom span{margin:0;min-width:32px}
+.canvas-status .zoom button{padding:5px 9px;font-size:11px;border-radius:7px}
+@media(max-width:520px){.canvas-tools{padding:8px;gap:6px}.canvas-tools button{padding:8px;font-size:10px}.canvas-options summary{font-size:10px;padding:8px 5px;gap:5px}.canvas-status .canvas-dimensions{display:none}.canvas-status .zoom{margin-left:auto}.studio-body .canvas-status{padding:7px 8px;font-size:9px}.canvas-tools .region-panel{max-height:150px}}
