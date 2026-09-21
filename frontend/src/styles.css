@@ -222,3 +222,41 @@ summary:focus-visible{outline:3px solid #8aaf4e;outline-offset:5px}
 @media(max-width:800px){.studio-body:has(>.layers[hidden]){grid-template-columns:minmax(0,1fr)}.studio-body:has(>.properties[hidden]){grid-template-columns:135px minmax(0,1fr)}.studio-top .export-options button{width:100%}}
 @media(max-width:520px){.studio-body:has(>.properties[hidden]){grid-template-columns:minmax(0,1fr)}.studio-top>.actions{justify-content:flex-start}.studio-top>.actions>button{flex:1 1 auto;font-size:10px}.export-options{right:0}.export-menu{margin-left:auto}.export-options button{flex:none!important}}
 .comparison-divider{width:12px;margin-left:-6px;background:linear-gradient(to right,transparent 5px,#fff 5px,#fff 7px,transparent 7px);box-shadow:none;pointer-events:auto;cursor:ew-resize;touch-action:none}
+
+/* The editor owns the viewport; only its canvas and tools scroll. */
+.studio{height:100dvh;display:flex;flex-direction:column;overflow:hidden}
+.studio-top{flex:0 0 auto;min-height:60px}
+.studio-body{flex:1;min-height:0;overflow:hidden;position:relative}
+.studio-body .canvas-column{min-height:0;overflow:hidden}
+.studio-body .canvas-toolbar,.studio-body .comparison-toolbar,.studio-body .canvas-status{flex-shrink:0}
+.studio-body .canvas,.studio-body .studio-code{height:auto;min-height:0;flex:1}
+.studio-body .properties{height:100%;max-height:none;overflow:auto}
+.studio-body .layers{height:100%;min-height:0;display:flex;flex-direction:column;overflow:auto}
+.studio-body .layers[hidden]{display:none}
+.studio-body .layer-list{flex:1;min-height:100px;max-height:none;overflow:auto}
+.studio-body .insert-tools,.studio-body .sidebar-heading,.studio-body .reference-toggle{flex-shrink:0}
+.studio-body .reference-image{max-height:25vh;object-fit:contain}
+.studio-body .region-tools{flex-shrink:0;max-height:38%;overflow:auto}
+.studio>.error{flex-shrink:0;max-height:15vh;overflow:auto}
+@media(max-width:800px){
+ .studio-body,.studio-body:has(>.layers[hidden]),.studio-body:has(>.properties[hidden]){grid-template-columns:minmax(0,1fr)}
+ .studio-body>.layers,.studio-body>.properties{position:absolute;top:0;bottom:0;z-index:12;background:#fff;width:min(290px,85vw);height:100%;box-shadow:0 8px 30px #172e3020}
+ .studio-body>.layers{left:0;border-right:1px solid var(--line)}
+ .studio-body>.properties{right:0;border-left:1px solid var(--line);grid-column:auto}
+ .studio-body .properties .editor-body{display:flex}
+ .studio-body .layer-list{display:block;max-height:none}
+ .studio-body .layer-list button{max-width:none;width:100%}
+ .studio-body .insert-grid{grid-template-columns:1fr 1fr}
+ .studio-body .insert-grid button{flex-direction:row}
+ .studio-top{padding:8px 12px;gap:6px}
+ .studio-top .actions{width:auto;flex:1;justify-content:flex-end}
+ .studio-top strong{max-width:140px}
+ .studio-top .actions>button{flex:none}
+ .studio-top .export-options button{width:100%}
+}
+@media(max-width:800px){
+ .studio-top{flex-wrap:wrap}
+ .studio-top>div:first-child{width:100%;display:flex;align-items:center}
+ .studio-top .actions{width:100%;flex:auto;display:flex;flex-direction:row;justify-content:flex-end;gap:6px}
+ .studio-top .actions>button{padding:8px 10px}
+}

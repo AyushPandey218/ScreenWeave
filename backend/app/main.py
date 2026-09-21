@@ -5,11 +5,14 @@ import io
 import os
 import tempfile
 import threading
+import time
 from pathlib import Path
 from zipfile import ZIP_DEFLATED, ZipFile
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse, RedirectResponse
+from . import diagnostics
 from starlette.concurrency import run_in_threadpool
 
 from .baseline import MAX_BYTES
@@ -30,6 +33,34 @@ app.add_middleware(
     allow_methods=["GET", "POST"],
     allow_headers=["Content-Type"],
 )
+
+
+@app.middleware("http")
+async def measure_requests(request: Request, call_next):
+    if request.url.path not in {"/reconstruct", "/render"} or request.method != "POST":
+        return await call_next(request)
+    start, status = time.monotonic(), 500
+    try:
+        response = await call_next(request)
+        status = response.status_code
+        return response
+    finally:
+        diagnostics.record(status, time.monotonic() - start)
+
+
+@app.get("/", include_in_schema=False)
+def dashboard_redirect():
+    return RedirectResponse("/dashboard")
+
+
+@app.get("/dashboard", response_class=HTMLResponse, include_in_schema=False)
+def dashboard():
+    return HTMLResponse((Path(__file__).parent / "dashboard.html").read_text(encoding="utf-8-sig"))
+
+
+@app.get("/status")
+def service_status():
+    return diagnostics.snapshot(job_lock.locked())
 
 
 @app.get("/health")

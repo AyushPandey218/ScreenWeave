@@ -296,3 +296,7 @@ React, and Tailwind exports. Reference fonts use a bounded cache.
 Validation includes 18 backend tests, frontend and Tailwind export builds,
 browser style parity with HTML, typography backup preservation, and
 frontend/test-quality.cjs for the workspace controls and visual reports.
+
+Backend diagnostics are available at /dashboard (the API root redirects there). The public dashboard shows process uptime, memory, aggregate request timings and failures, OCR package availability, and a test upload. Metrics reset on restart; refresh is manual. It never displays uploaded screenshots or private logs.
+
+The editor uses the full viewport with internal panel scrolling. The website navigation is hidden while editing; use Back to Projects to leave. On small screens, layers and properties start collapsed and open over the canvas.

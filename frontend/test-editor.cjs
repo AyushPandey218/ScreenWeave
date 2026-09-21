@@ -68,6 +68,7 @@ fs.mkdirSync('reports',{recursive:true});
   await p.setViewportSize({width:390,height:844});
   await p.screenshot({path:'reports/redesign-mobile-editor.png',fullPage:true});
   assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
+  await p.getByRole('button',{name:'← Projects',exact:true}).click();
   await p.getByRole('link',{name:'Help',exact:true}).click();
   await p.getByText('Where are my projects saved?',{exact:false}).click();
   assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
