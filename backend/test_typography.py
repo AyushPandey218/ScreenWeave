@@ -30,3 +30,14 @@ class TypographyTests(unittest.TestCase):
             result = text_style(np.asarray(image), {'x': 15, 'y': 15, 'width': 350, 'height': 60, 'text': 'ScreenWeave studio'})
             self.assertEqual(result['font_weight'], weight)
             self.assertAlmostEqual(result['font_size'], 28, delta=2)
+
+    def test_font_families(self):
+        from app.typography import FONT_FAMILIES
+        for family, (regular, _) in FONT_FAMILIES.items():
+            path = next((p for p in regular if p.is_file()), None)
+            if path is None:
+                continue
+            image=Image.new('RGB',(500,100),'white')
+            ImageDraw.Draw(image).text((20,20),'ScreenWeave studio',fill='#172e30',font=ImageFont.truetype(str(path),28))
+            result=text_style(np.asarray(image),{'x':15,'y':15,'width':400,'height':60,'text':'ScreenWeave studio'})
+            self.assertEqual(result['font_family'],family)

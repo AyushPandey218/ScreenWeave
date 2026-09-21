@@ -5,6 +5,7 @@ import io
 import cv2
 import numpy as np
 from PIL import Image
+from .media import detect_media, intersection
 
 
 def dominant(pixels):
@@ -46,6 +47,7 @@ def overlap(a, b):
 
 
 def detect_shapes(rgb, texts):
+    media = detect_media(rgb, texts)
     edges = cv2.Canny(cv2.cvtColor(rgb, cv2.COLOR_RGB2GRAY), 20, 80)
     # Bridge one-pixel gaps caused by antialiased/thin curved borders.
     edges = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, np.ones((3, 3), np.uint8))
@@ -56,6 +58,8 @@ def detect_shapes(rgb, texts):
         if w < 10 or h < 10:
             continue
         box = {"x": x, "y": y, "width": w, "height": h}
+        if any(intersection(box, photo)/(w*h) > .8 for photo in media):
+            continue
         # Do not mistake text glyphs or whole words for controls/icons.
         if any(overlap(box, t) / (w*h) > 0.45 for t in texts):
             continue
@@ -104,4 +108,4 @@ def detect_shapes(rgb, texts):
             candidate['src'] = 'data:image/png;base64,' + base64.b64encode(buffer.getvalue()).decode('ascii')
         selected.append(candidate)
         accepted_indices.add(candidate['index'])
-    return [{k: v for k, v in candidate.items() if k not in ('contour', 'index')} for candidate in selected]
+    return sorted(media + [{k: v for k, v in candidate.items() if k not in ('contour', 'index')} for candidate in selected], key=lambda b: -b['width']*b['height'])

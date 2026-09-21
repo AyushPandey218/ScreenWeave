@@ -8,10 +8,11 @@ def apply_tailwind(layout, files):
 
     classes = {}
     for e in layout["elements"]:
+        font = {'sans-serif':'Arial,sans-serif', 'serif':"'Times_New_Roman',serif", 'monospace':"'Courier_New',monospace"}.get(e.get('font_family'), 'Arial,sans-serif')
         rules = ["absolute", f"left-[{px(e['x'])}]", f"top-[{px(e['y'])}]",
                  f"w-[{px(e['width'])}]", f"h-[{px(e['height'])}]"]
         if e["type"] == "text":
-            rules += [f"text-[length:{px(e.get('font_size', round(e['height']*.95)))}]",
+            rules += [f"[font-family:{font}]", f"text-[length:{px(e.get('font_size', round(e['height']*.95)))}]",
                       f"leading-[{e.get('line_height', 1)}]", "whitespace-pre-wrap" if e.get('wrap') else "whitespace-nowrap",
                       "[overflow-wrap:anywhere]" if e.get('wrap') else "[overflow-wrap:normal]", f"text-{e.get('text_align', 'left')}", f"font-[{e.get('font_weight', 400)}]",  f"text-[{e.get('color', '#172554')}]"]
         elif e["type"] != "image":
@@ -20,9 +21,9 @@ def apply_tailwind(layout, files):
                       f"border-[{px(e.get('border_width', 1))}]", f"border-[{e.get('border', '#cbd5e1')}]",
                       f"rounded-[{radius}]", "p-0"]
             if e["type"] == "button":
-                rules += [f"text-[{e.get('color', '#ffffff')}]", f"[font:{px(e.get('font_size', 20))}_Arial,sans-serif]"]
+                rules += [f"text-[{e.get('color', '#ffffff')}]", f"[font:{px(e.get('font_size', 20))}_{font}]"]
                 # Keep font shorthand and line-height in one utility to avoid cascade ambiguity.
-                rules[-1] = f"[font:{e.get('font_weight', 400)}_{px(e.get('font_size', 20))}/{e.get('line_height', 'normal')}_Arial,sans-serif]"
+                rules[-1] = f"[font:{e.get('font_weight', 400)}_{px(e.get('font_size', 20))}/{e.get('line_height', 'normal')}_{font}]"
                 rules += [f"text-{e.get('text_align', 'center')}", "whitespace-pre-wrap" if e.get('wrap') else "whitespace-normal"]
         classes[e["id"]] = " ".join(rules)
     page = f"relative w-[{px(layout['viewport']['width'])}] h-[{px(layout['viewport']['height'])}]"

@@ -42,22 +42,23 @@ def reconstruct(payload):
         x, y = points.min(axis=0)
         right, bottom = points.max(axis=0)
         texts.append({"x": int(x), "y": int(y), "width": int(right-x), "height": int(bottom-y), "text": value, "confidence": float(confidence)})
-    for text in texts:
-        text.update(text_style(rgb, text))
     boxes = detect_shapes(rgb, texts)
     elements = []
-    consumed = set()
+    consumed = {i for i,t in enumerate(texts) if any('src' in b and contains(b,t) for b in boxes)}
+    for i,text in enumerate(texts):
+        if i not in consumed:
+            text.update(text_style(rgb,text))
     for index, box in enumerate(boxes):
         x, y, w, h = (box[k] for k in ("x", "y", "width", "height"))
-        labels = [(i, t) for i, t in enumerate(texts) if contains(box, t)]
+        labels = [(i, t) for i, t in enumerate(texts) if i not in consumed and contains(box, t)]
         nested = any(contains(box, other) and other is not box and "src" not in other for other in boxes)
-        kind = "image" if "src" in box else "container" if nested or h > 100 else "button" if labels else "input"
+        kind = "image" if "src" in box else "container" if nested or h > 100 else "button" if labels and len(labels) == 1 and abs(labels[0][1]["x"] + labels[0][1]["width"]/2 - (x+w/2)) < w*.18 else "input"
         element = {**box, "id": f"element-{index}", "type": kind}
         if kind in {"button", "image"}:
             element["text"] = " ".join(t["text"] for _, t in labels)
             consumed.update(i for i, _ in labels)
         if kind == "button" and labels:
-            element.update({key: labels[0][1][key] for key in ("color", "font_size", "font_weight") if key in labels[0][1]})
+            element.update({key: labels[0][1][key] for key in ("color", "font_size", "font_weight", "font_family") if key in labels[0][1]})
         parents = [e for e in elements if e["type"] == "container" and contains(e, box)]
         element["parent_id"] = min(parents, key=lambda e: e["width"]*e["height"])["id"] if parents else None
         elements.append(element)
@@ -66,7 +67,7 @@ def reconstruct(payload):
             continue
         parents = [e for e in elements if e["type"] == "container" and contains(e, text)]
         elements.append({**text, "id": f"text-{i}", "type": "text", "parent_id": min(parents, key=lambda e: e["width"]*e["height"])["id"] if parents else None})
-    return {"version": 1, "viewport": {"width": width, "height": height}, "background": color(rgb), "elements": elements, "limitations": ["Heuristic labels, not a trained UI detector", "Fixed viewport; no responsive inference", "Fonts, borders, and corner radii are estimates", "Small detected graphics are embedded PNG crops, not editable vectors", "No working authentication"]}
+    return {"version": 1, "viewport": {"width": width, "height": height}, "background": color(rgb), "elements": elements, "limitations": ["Heuristic labels, not a trained UI detector", "Fixed viewport; no responsive inference", "Fonts, borders, and corner radii are estimates", "Detected photos and graphics are embedded PNG crops, not editable vectors; large assets may be downscaled", "No working authentication"]}
 
 
 def export(layout):
@@ -74,17 +75,18 @@ def export(layout):
     markup = []
     for e in layout["elements"]:
         identity = e["id"]
+        font = {'sans-serif':'Arial,sans-serif', 'serif':'"Times New Roman",serif', 'monospace':'"Courier New",monospace'}.get(e.get('font_family'), 'Arial,sans-serif')
         rules.append(f"#{identity}{{position:absolute;left:{e['x']}px;top:{e['y']}px;width:{e['width']}px;height:{e['height']}px;}}")
         if e["type"] == "image":
             markup.append(f'<img id="{identity}" src="{html.escape(e["src"], quote=True)}" alt="Reconstructed graphic">')
         elif e["type"] == "text":
-            rules.append(f"#{identity}{{font-size:{e.get('font_size', round(e['height']*0.95))}px;line-height:{e.get('line_height', 1)};font-weight:{e.get('font_weight', 400)};text-align:{e.get('text_align', 'left')};white-space:{'pre-wrap' if e.get('wrap') else 'nowrap'};overflow-wrap:{'anywhere' if e.get('wrap') else 'normal'};color:{e.get('color', '#172554')}}}")
+            rules.append(f"#{identity}{{font-family:{font};font-size:{e.get('font_size', round(e['height']*0.95))}px;line-height:{e.get('line_height', 1)};font-weight:{e.get('font_weight', 400)};text-align:{e.get('text_align', 'left')};white-space:{'pre-wrap' if e.get('wrap') else 'nowrap'};overflow-wrap:{'anywhere' if e.get('wrap') else 'normal'};color:{e.get('color', '#172554')}}}")
             markup.append(f'<div id="{identity}">{html.escape(e["text"])}</div>')
         else:
             radius = "50%" if e.get("geometry") == "ellipse" else f"{e['radius']}px"
             rules.append(f"#{identity}{{background:{e['background']};border:{e.get('border_width', 1)}px solid {e['border']};border-radius:{radius};padding:0}}")
             if e["type"] == "button":
-                rules.append(f"#{identity}{{color:{e.get('color', '#ffffff')};font:{e.get('font_size', 20)}px Arial,sans-serif;font-weight:{e.get('font_weight', 400)};line-height:{e.get('line_height', 'normal')};text-align:{e.get('text_align', 'center')};white-space:{'pre-wrap' if e.get('wrap') else 'normal'}}}")
+                rules.append(f"#{identity}{{color:{e.get('color', '#ffffff')};font:{e.get('font_size', 20)}px {font};font-weight:{e.get('font_weight', 400)};line-height:{e.get('line_height', 'normal')};text-align:{e.get('text_align', 'center')};white-space:{'pre-wrap' if e.get('wrap') else 'normal'}}}")
                 markup.append(f'<button type="button" id="{identity}">{html.escape(e.get("text", ""))}</button>')
             elif e["type"] == "input":
                 markup.append(f'<input id="{identity}" aria-label="Reconstructed input" autocomplete="off">')
