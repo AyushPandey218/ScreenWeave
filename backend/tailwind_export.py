@@ -12,7 +12,8 @@ def apply_tailwind(layout, files):
                  f"w-[{px(e['width'])}]", f"h-[{px(e['height'])}]"]
         if e["type"] == "text":
             rules += [f"text-[length:{px(e.get('font_size', round(e['height']*.95)))}]",
-                      "leading-none", "whitespace-nowrap", f"text-[{e.get('color', '#172554')}]"]
+                      f"leading-[{e.get('line_height', 1)}]", "whitespace-pre-wrap" if e.get('wrap') else "whitespace-nowrap",
+                      "[overflow-wrap:anywhere]" if e.get('wrap') else "[overflow-wrap:normal]", f"text-{e.get('text_align', 'left')}", f"font-[{e.get('font_weight', 400)}]",  f"text-[{e.get('color', '#172554')}]"]
         elif e["type"] != "image":
             radius = "50%" if e.get("geometry") == "ellipse" else px(e.get("radius", 0))
             rules += [f"bg-[{e.get('background', '#ffffff')}]", "border-solid",
@@ -20,6 +21,9 @@ def apply_tailwind(layout, files):
                       f"rounded-[{radius}]", "p-0"]
             if e["type"] == "button":
                 rules += [f"text-[{e.get('color', '#ffffff')}]", f"[font:{px(e.get('font_size', 20))}_Arial,sans-serif]"]
+                # Keep font shorthand and line-height in one utility to avoid cascade ambiguity.
+                rules[-1] = f"[font:{e.get('font_weight', 400)}_{px(e.get('font_size', 20))}/{e.get('line_height', 'normal')}_Arial,sans-serif]"
+                rules += [f"text-{e.get('text_align', 'center')}", "whitespace-pre-wrap" if e.get('wrap') else "whitespace-normal"]
         classes[e["id"]] = " ".join(rules)
     page = f"relative w-[{px(layout['viewport']['width'])}] h-[{px(layout['viewport']['height'])}]"
     files["src/classes.ts"] = "export const elementClasses: Record<string, string> = " + json.dumps(classes, indent=2) + ";\nexport const pageClasses = " + json.dumps(page) + ";\n"

@@ -31,7 +31,7 @@ const assert=require('node:assert/strict'),path=require('node:path');
  assert.equal(await p.locator('.element-hit').count(),before);
  await p.getByRole('button',{name:'Redo',exact:true}).click();await ready();
  for(const [name,file] of [['↓ React + Tailwind','selective-tailwind.zip'],['↓ HTML / CSS','selective-html.zip']]){
- const event=p.waitForEvent('download');await p.getByRole('button',{name,exact:true}).click();await(await event).saveAs(path.resolve('reports',file));}
+ await p.getByRole('button',{name:'Export ↓',exact:true}).click();const event=p.waitForEvent('download');await p.getByRole('button',{name,exact:true}).click();await(await event).saveAs(path.resolve('reports',file));}
  await p.reload();await ready();await p.frameLocator('iframe').getByText('Outside preserved',{exact:true}).waitFor();
  await p.getByRole('button',{name:'Reconstruct region',exact:true}).click();
  await p.setViewportSize({width:390,height:844});

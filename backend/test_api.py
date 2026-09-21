@@ -65,6 +65,25 @@ class ApiTests(unittest.TestCase):
                     data = json.loads(archive.read('src/layout.json'))
                     self.assertEqual(next(e['text'] for e in data['elements'] if e['type'] == 'button'), '<Start & go>')
 
+    def test_typography_export_fields(self):
+        fixture = Path(__file__).resolve().parents[1] / 'tests/fixtures/rounded-layout.json'
+        layout = json.loads(fixture.read_text())
+        text = next(e for e in layout['elements'] if e['type'] == 'text')
+        text.update(font_weight=700, line_height=1.5, text_align='right', wrap=True)
+        response = self.client.post('/render', json=layout)
+        self.assertEqual(response.status_code, 200)
+        result = response.json()
+        for rule in ('font-weight:700', 'line-height:1.5', 'text-align:right', 'white-space:pre-wrap'):
+            self.assertIn(rule, result['css'])
+        with ZipFile(io.BytesIO(base64.b64decode(result['exports']['tailwind']))) as archive:
+            classes = archive.read('src/classes.ts').decode()
+            for utility in ('font-[700]', 'leading-[1.5]', 'text-right', 'whitespace-pre-wrap'):
+                self.assertIn(utility, classes)
+        for patch in ({'font_weight':900}, {'line_height':0}, {'text_align':'left;display:none'}, {'line_height':4}):
+            text.update(font_weight=700, line_height=1.5, text_align='right', wrap=True)
+            text.update(patch)
+            self.assertEqual(self.client.post('/render', json=layout).status_code,422)
+
     def test_layout_rejects_injection_and_invalid_sizes(self):
         fixture = Path(__file__).resolve().parents[1] / 'tests/fixtures/rounded-layout.json'
         for patch in ({'id': 'x\" onclick=alert(1)'}, {'background': 'red;position:fixed'}, {'width': -1}, {'src': 'javascript:alert(1)'}):

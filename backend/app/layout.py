@@ -15,6 +15,10 @@ class Element(BaseModel):
     border: str = Field(default='#cbd5e1', pattern=r'^#[0-9a-fA-F]{6}$')
     color: str | None = Field(default=None, pattern=r'^#[0-9a-fA-F]{6}$')
     font_size: float | None = Field(default=None, ge=1, le=500, allow_inf_nan=False)
+    font_weight: Literal[400, 700] = 400
+    line_height: float | None = Field(default=None, ge=0.5, le=3, allow_inf_nan=False)
+    text_align: Literal['left', 'center', 'right'] | None = None
+    wrap: bool = False
     border_width: float = Field(default=1, ge=0, le=50, allow_inf_nan=False)
     radius: float = Field(default=0, ge=0, le=5000, allow_inf_nan=False)
     geometry: Literal['rounded-rectangle', 'ellipse'] = 'rounded-rectangle'

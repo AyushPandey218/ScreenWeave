@@ -57,7 +57,7 @@ def reconstruct(payload):
             element["text"] = " ".join(t["text"] for _, t in labels)
             consumed.update(i for i, _ in labels)
         if kind == "button" and labels:
-            element.update({key: labels[0][1][key] for key in ("color", "font_size") if key in labels[0][1]})
+            element.update({key: labels[0][1][key] for key in ("color", "font_size", "font_weight") if key in labels[0][1]})
         parents = [e for e in elements if e["type"] == "container" and contains(e, box)]
         element["parent_id"] = min(parents, key=lambda e: e["width"]*e["height"])["id"] if parents else None
         elements.append(element)
@@ -78,13 +78,13 @@ def export(layout):
         if e["type"] == "image":
             markup.append(f'<img id="{identity}" src="{html.escape(e["src"], quote=True)}" alt="Reconstructed graphic">')
         elif e["type"] == "text":
-            rules.append(f"#{identity}{{font-size:{e.get('font_size', round(e['height']*0.95))}px;line-height:1;white-space:nowrap;color:{e.get('color', '#172554')}}}")
+            rules.append(f"#{identity}{{font-size:{e.get('font_size', round(e['height']*0.95))}px;line-height:{e.get('line_height', 1)};font-weight:{e.get('font_weight', 400)};text-align:{e.get('text_align', 'left')};white-space:{'pre-wrap' if e.get('wrap') else 'nowrap'};overflow-wrap:{'anywhere' if e.get('wrap') else 'normal'};color:{e.get('color', '#172554')}}}")
             markup.append(f'<div id="{identity}">{html.escape(e["text"])}</div>')
         else:
             radius = "50%" if e.get("geometry") == "ellipse" else f"{e['radius']}px"
             rules.append(f"#{identity}{{background:{e['background']};border:{e.get('border_width', 1)}px solid {e['border']};border-radius:{radius};padding:0}}")
             if e["type"] == "button":
-                rules.append(f"#{identity}{{color:{e.get('color', '#ffffff')};font:{e.get('font_size', 20)}px Arial,sans-serif}}")
+                rules.append(f"#{identity}{{color:{e.get('color', '#ffffff')};font:{e.get('font_size', 20)}px Arial,sans-serif;font-weight:{e.get('font_weight', 400)};line-height:{e.get('line_height', 'normal')};text-align:{e.get('text_align', 'center')};white-space:{'pre-wrap' if e.get('wrap') else 'normal'}}}")
                 markup.append(f'<button type="button" id="{identity}">{html.escape(e.get("text", ""))}</button>')
             elif e["type"] == "input":
                 markup.append(f'<input id="{identity}" aria-label="Reconstructed input" autocomplete="off">')

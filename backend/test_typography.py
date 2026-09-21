@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
-from app.typography import text_style, FONT_PATHS
+from app.typography import text_style, FONT_PATHS, BOLD_PATHS
 
 class TypographyTests(unittest.TestCase):
     def test_colored_text_size(self):
@@ -17,3 +17,16 @@ class TypographyTests(unittest.TestCase):
 
     def test_blank_region(self):
         self.assertEqual(text_style(np.full((30, 100, 3), 255, dtype=np.uint8), {'x': 0, 'y': 0, 'width': 100, 'height': 30, 'text': ''}), {})
+
+
+    def test_regular_and_bold_weight(self):
+        for weight, paths in ((400, FONT_PATHS), (700, BOLD_PATHS)):
+            font_path = next((p for p in paths if p.is_file()), None)
+            if font_path is None:
+                self.skipTest('No reference font')
+            image = Image.new('RGB', (500, 100), 'white')
+            draw = ImageDraw.Draw(image)
+            draw.text((20, 20), 'ScreenWeave studio', fill='#172e30', font=ImageFont.truetype(str(font_path), 28))
+            result = text_style(np.asarray(image), {'x': 15, 'y': 15, 'width': 350, 'height': 60, 'text': 'ScreenWeave studio'})
+            self.assertEqual(result['font_weight'], weight)
+            self.assertAlmostEqual(result['font_size'], 28, delta=2)

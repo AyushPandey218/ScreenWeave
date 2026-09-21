@@ -25,7 +25,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('n
  await p.mouse.move(hit.x+hit.width/2,hit.y+hit.height/2);await p.mouse.down();await p.mouse.move(hit.x+hit.width/2+19,hit.y+hit.height/2+26,{steps:5});await p.mouse.up();await ready();
  assert.equal(Number(await p.getByLabel('X position',{exact:true}).inputValue())%8,0);
  assert.equal(Number(await p.getByLabel('Y position',{exact:true}).inputValue())%8,0);
- const event=p.waitForEvent('download');await p.getByRole('button',{name:'↓ Project backup',exact:true}).click();
+ await p.getByRole('button',{name:'Export ↓',exact:true}).click();const event=p.waitForEvent('download');await p.getByRole('button',{name:'↓ Project backup',exact:true}).click();
  const backupFile=path.resolve('reports/roundtrip.screenweave.json');await(await event).saveAs(backupFile);
  const backup=JSON.parse(fs.readFileSync(backupFile,'utf8'));
  const originalUrl=p.url();

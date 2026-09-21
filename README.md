@@ -270,3 +270,29 @@ apply/discard/cancel, preservation of outside edits, undo/redo, reload, and mobi
 checks. Run frontend/test-region.cjs with Playwright and local servers.
 frontend/test-region-merge.mjs exercises merge edge cases using Node with native
 TypeScript stripping (tested on Node 24).
+
+### Editor workspace and quality review
+
+A single **Export** menu contains all code formats and the project backup.
+**Hide layers** and **Hide properties** expand the canvas; Show restores them.
+Comparison defaults to a draggable before/after divider (original left, draft
+right). Overlay mode remains available. Comparison controls never alter exports.
+
+Expand **Quality checks** in Properties to compare a locally rasterized draft
+with the reference, sampled at a maximum long side of 960 pixels. The report
+counts pixels with mean RGB channel difference above 25/255 and shows a red
+difference overlay, high-difference cells in a 4x4 grid, overflow warnings, and
+font sizes below 12 px. This is a visual diagnostic, not an accuracy score.
+Flat backgrounds, font rendering, antialiasing, and browser rasterization affect
+it. Editing the draft invalidates the report. Image comparison runs in the
+browser using html-to-image, with a script-disabled isolated render.
+
+Typography now estimates regular/bold weight from reference glyph dimensions,
+ink density, and silhouette, using Arial/Liberation Sans. It does not identify
+arbitrary font families. Text/button properties include weight, line height,
+alignment, and wrapping, all validated and preserved in backups and HTML,
+React, and Tailwind exports. Reference fonts use a bounded cache.
+
+Validation includes 18 backend tests, frontend and Tailwind export builds,
+browser style parity with HTML, typography backup preservation, and
+frontend/test-quality.cjs for the workspace controls and visual reports.

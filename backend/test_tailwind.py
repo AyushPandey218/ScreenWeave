@@ -17,7 +17,7 @@ class TailwindTests(unittest.TestCase):
                 classes=archive.read('src/classes.ts').decode()
                 self.assertIn('left-[150.5px]',classes)
                 self.assertIn('rounded-[22px]',classes)
-                self.assertIn('[font:26px_Arial,sans-serif]',classes)
+                self.assertIn('[font:400_26px/normal_Arial,sans-serif]',classes)
                 self.assertIn('text-[#112233]',classes)
                 self.assertIn('element.text',archive.read('src/App.tsx').decode())
                 self.assertIn('@tailwindcss/vite',archive.read('vite.config.ts').decode())

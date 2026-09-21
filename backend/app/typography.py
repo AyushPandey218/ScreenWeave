@@ -1,13 +1,19 @@
-"""Infer text color and an approximate Arial-compatible font size from pixel bounds."""
+"""Estimate text color, size, and regular/bold Arial-compatible weight."""
+from functools import lru_cache
 from pathlib import Path
 import numpy as np
-from PIL import ImageFont
+from PIL import Image, ImageDraw, ImageFont
 
 FONT_PATHS = [Path('C:/Windows/Fonts/arial.ttf'), Path('/usr/share/fonts/truetype/liberation2/LiberationSans-Regular.ttf'), Path('/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf')]
+BOLD_PATHS = [Path('C:/Windows/Fonts/arialbd.ttf'), Path('/usr/share/fonts/truetype/liberation2/LiberationSans-Bold.ttf'), Path('/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf')]
+
+@lru_cache(maxsize=128)
+def reference_font(path, size):
+    return ImageFont.truetype(path, size)
 
 def text_style(rgb, box):
-    x, y = max(0, box['x']), max(0, box['y'])
-    crop = rgb[y:min(rgb.shape[0], y+box['height']), x:min(rgb.shape[1], x+box['width'])]
+    x, y = max(0, int(box['x'])), max(0, int(box['y']))
+    crop = rgb[y:min(rgb.shape[0], y+int(box['height'])), x:min(rgb.shape[1], x+int(box['width']))]
     if crop.size == 0:
         return {}
     colors, counts = np.unique(crop.reshape(-1, 3), axis=0, return_counts=True)
@@ -19,14 +25,33 @@ def text_style(rgb, box):
     foreground = ink[occurrences.argmax()]
     ys, xs = np.where(mask)
     width, height = int(xs.max()-xs.min()+1), int(ys.max()-ys.min()+1)
-    font_path = next((p for p in FONT_PATHS if p.is_file()), None)
-    size = max(8, round(height*1.3))
-    if font_path and box.get('text'):
+    size, weight = max(8, round(height*1.3)), 400
+    text = box.get('text', '')
+    if text:
+        target = Image.fromarray((mask[ys.min():ys.max()+1,xs.min():xs.max()+1]*255).astype('uint8')).resize((96,32))
+        target = np.asarray(target)/255.0
         best = float('inf')
-        for candidate in range(max(5, height//2), min(200, height*3)+1):
-            bounds = ImageFont.truetype(str(font_path), candidate).getbbox(box['text'])
-            measured_w, measured_h = bounds[2]-bounds[0], bounds[3]-bounds[1]
-            loss = abs(measured_w-width)/max(1,width)+abs(measured_h-height)/max(1,height)
-            if loss < best:
-                best, size = loss, candidate
-    return {'color': '#' + ''.join(f'{int(v):02x}' for v in foreground), 'font_size': size}
+        for candidate_weight, paths in ((400,FONT_PATHS),(700,BOLD_PATHS)):
+            path = next((p for p in paths if p.is_file()), None)
+            if path is None:
+                continue
+            candidates = []
+            for candidate in range(max(5,height//2), min(200,height*3)+1):
+                font = reference_font(str(path), candidate)
+                bounds = font.getbbox(text)
+                w,h = bounds[2]-bounds[0],bounds[3]-bounds[1]
+                if w <= 0 or h <= 0:
+                    continue
+                loss = abs(w-width)/max(1,width)+abs(h-height)/max(1,height)
+                candidates.append((loss,candidate,bounds))
+            for loss,candidate,bounds in sorted(candidates)[:3]:
+                sample = Image.new('L',(bounds[2]-bounds[0],bounds[3]-bounds[1]),0)
+                ImageDraw.Draw(sample).text((-bounds[0],-bounds[1]),text,font=reference_font(str(path),candidate),fill=255)
+                threshold = 255 * 35 / max(36, float(np.linalg.norm(foreground.astype(float)-background.astype(float))))
+                binary = Image.fromarray((np.asarray(sample) > threshold).astype('uint8')*255)
+                pixels = np.asarray(binary.resize((96,32)))/255.0
+                # Ink density and glyph silhouette distinguish regular from bold.
+                loss += 1.5*abs(pixels.mean()-target.mean()) + .5*np.abs(pixels-target).mean()
+                if loss < best:
+                    best,size,weight = loss,candidate,candidate_weight
+    return {'color':'#'+''.join(f'{int(v):02x}' for v in foreground), 'font_size':size, 'font_weight':weight}

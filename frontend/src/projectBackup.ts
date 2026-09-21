@@ -42,6 +42,10 @@ function layout(value: unknown): Layout {
     if (e.radius != null) item.radius = number(e.radius,0,5000);
     if (e.border_width != null) item.border_width = number(e.border_width,0,50);
     if (e.font_size != null) item.font_size = number(e.font_size,1,500);
+    if (e.font_weight != null) {check(e.font_weight===400||e.font_weight===700,'Invalid font weight.');item.font_weight=e.font_weight;}
+    if (e.line_height != null) item.line_height=number(e.line_height,.5,3);
+    if (e.text_align != null) {check(e.text_align==='left'||e.text_align==='center'||e.text_align==='right','Invalid text alignment.');item.text_align=e.text_align;}
+    if (e.wrap != null) {check(typeof e.wrap==='boolean','Invalid text wrapping.');item.wrap=e.wrap;}
     if (e.geometry != null) {
       check(e.geometry === 'ellipse' || e.geometry === 'rounded-rectangle', 'Invalid element geometry.');
       item.geometry = e.geometry;

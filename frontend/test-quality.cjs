@@ -1,0 +1,40 @@
+const {chromium}=require(process.argv[2]||'playwright');
+const assert=require('node:assert/strict'),path=require('node:path');
+process.chdir(path.resolve(__dirname,'..'));
+(async()=>{const b=await chromium.launch({channel:'msedge',headless:true});try{
+ const p=await b.newPage({viewport:{width:1440,height:1000}}),errors=[];
+ p.on('pageerror',e=>errors.push(e.message));
+ await p.goto('http://127.0.0.1:5173/new?example=rounded');await p.locator('.upload-preview').waitFor();await p.getByRole('button',{name:'Create project →',exact:true}).click();
+ const ready=()=>p.getByRole('status').filter({hasText:'Preview and exports up to date'}).waitFor({timeout:120000});await ready();
+ await p.getByRole('button',{name:'Hide layers',exact:true}).click();assert.equal(await p.locator('.layers').isVisible(),false);
+ await p.getByRole('button',{name:'Hide properties',exact:true}).click();assert.equal(await p.locator('.properties').isVisible(),false);
+ await p.getByRole('button',{name:'Show layers',exact:true}).click();await p.getByRole('button',{name:'Show properties',exact:true}).click();
+ await p.getByRole('button',{name:'Compare original',exact:true}).click();
+ await p.getByRole('slider',{name:'Comparison divider',exact:true}).fill('65');
+ assert((await p.locator('.comparison-overlay').getAttribute('style')).includes('35%'));
+ await p.getByRole('slider',{name:'Drag comparison divider',exact:true}).focus();await p.keyboard.press('ArrowLeft');
+ assert.equal(await p.getByRole('slider',{name:'Comparison divider',exact:true}).inputValue(),'64');
+ await p.getByRole('button',{name:'Compare original',exact:true}).click();
+ await p.getByRole('button',{name:'Add text',exact:true}).click();await ready();
+ await p.getByLabel('Element text',{exact:true}).fill('Typography wraps across two lines');
+ await p.getByLabel('Font weight',{exact:true}).selectOption('700');
+ await p.getByLabel('Line height',{exact:true}).fill('1.5');
+ await p.getByLabel('Text alignment',{exact:true}).selectOption('center');
+ await p.getByLabel('Wrap text',{exact:true}).check();await ready();
+ const text=p.frameLocator('iframe[title="Reconstructed website"]').getByText('Typography wraps across two lines',{exact:true});
+ assert.equal(await text.evaluate(e=>getComputedStyle(e).fontWeight),'700');
+ assert.equal(await text.evaluate(e=>getComputedStyle(e).whiteSpace),'pre-wrap');
+ await p.getByText('Quality checks',{exact:true}).click();await p.getByRole('button',{name:'Run quality check',exact:true}).click();
+ await p.getByText(/% of sampled pixels differ/).waitFor({timeout:30000});
+ assert.equal(await p.locator('.quality-overlay').count(),1);
+ await p.screenshot({path:'reports/quality-editor.png',fullPage:true});
+ await p.getByLabel('Element text',{exact:true}).fill('Updated typography');await ready();
+ assert.equal(await p.locator('.quality-overlay').count(),0);
+ for(const [label,file] of [['↓ HTML / CSS','typography-html.zip'],['↓ React + Tailwind','typography-tailwind.zip'],['↓ Project backup','typography.screenweave.json']]){
+ console.log('Downloading',label);await p.getByRole('button',{name:'Export ↓',exact:true}).click();const event=p.waitForEvent('download');await p.getByRole('button',{name:label,exact:true}).click();await(await event).saveAs(path.resolve('reports',file));
+ }
+ await p.getByRole('button',{name:'Export ↓',exact:true}).click();await p.keyboard.press('Escape');assert.equal(await p.locator('.export-options').count(),0);
+ await p.setViewportSize({width:390,height:844});assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+ await p.screenshot({path:'reports/quality-mobile.png',fullPage:true});
+ assert.deepEqual(errors,[]);console.log('PASS: export menu, collapsible panels, slider, typography, visual check and invalidation, downloads, mobile.');
+}finally{await b.close();}})().catch(e=>{console.error(e);process.exit(1)});

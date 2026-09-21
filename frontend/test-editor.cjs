@@ -49,7 +49,7 @@ fs.mkdirSync('reports',{recursive:true});
   await p.getByRole('button',{name:'Fit',exact:true}).click();
   await p.screenshot({path:'reports/redesign-editor.png',fullPage:true});
   for(const [name,file] of [['↓ HTML / CSS','redesign-html.zip'],['↓ React project','redesign-react.zip']]){
-   const event=p.waitForEvent('download');await p.getByRole('button',{name,exact:true}).click();await(await event).saveAs(path.resolve('reports',file));
+   await p.getByRole('button',{name:'Export ↓',exact:true}).click();const event=p.waitForEvent('download');await p.getByRole('button',{name,exact:true}).click();await(await event).saveAs(path.resolve('reports',file));
   }
   await p.getByRole('button',{name:'← Projects',exact:true}).click();
   await p.getByRole('heading',{name:'Editor regression',exact:true}).waitFor();
