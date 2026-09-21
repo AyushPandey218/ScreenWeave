@@ -260,3 +260,21 @@ summary:focus-visible{outline:3px solid #8aaf4e;outline-offset:5px}
  .studio-top .actions{width:100%;flex:auto;display:flex;flex-direction:row;justify-content:flex-end;gap:6px}
  .studio-top .actions>button{padding:8px 10px}
 }
+
+/* Floating glass navigation, kept outside the editing workspace. */
+.site-header{position:sticky;top:16px;width:calc(100% - 48px);max-width:1120px;height:68px;min-height:0;margin:16px auto 0;padding:9px 12px 9px 22px;border:1px solid #ffffffd9;border-radius:999px;background:#fdfefbef;-webkit-backdrop-filter:blur(22px) saturate(150%);backdrop-filter:blur(22px) saturate(150%);box-shadow:0 8px 32px #172e3010,0 1px 4px #172e300a,inset 0 1px 0 #fff;gap:16px}
+.site-header .brand{font-size:19px;letter-spacing:-.7px;flex-shrink:0}
+.site-header .mark{border-radius:50%;width:32px;height:32px}
+.site-header .beta{border-radius:999px}
+.site-header nav{gap:4px;padding:4px;border:1px solid #dde4dc80;border-radius:999px;background:#e9eee570}
+.site-header nav a{padding:10px 18px;border-radius:999px;font-size:12px;font-weight:500;color:#52625a;transition:background .18s,color .18s,box-shadow .18s}
+.site-header nav a:hover{background:#ffffffa6;color:#172e30}
+.site-header nav a.active{background:#fff;color:#172e30;box-shadow:0 2px 7px #172e3010}
+.site-header .nav-create{border-radius:999px;padding:13px 20px;white-space:nowrap}
+@media(max-width:800px){
+ .site-header{width:calc(100% - 24px);height:auto;top:10px;margin-top:10px;padding:12px 14px;gap:10px;border-radius:28px;flex-wrap:wrap}
+ .site-header nav{order:3;width:100%;justify-content:center;border:1px solid #dde4dc80;padding:4px;gap:4px}
+ .site-header nav a{flex:1;text-align:center;padding:9px 12px}
+ .site-header .nav-create{padding:11px 14px}
+}
+@media(prefers-reduced-transparency:reduce){.site-header{background:#fdfefb;-webkit-backdrop-filter:none;backdrop-filter:none}}
