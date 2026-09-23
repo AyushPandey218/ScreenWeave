@@ -1,5 +1,5 @@
 import type { Layout } from './ElementEditor';
-export type Project = { id: string; name: string; source: string; layout: Layout; original: Layout; updatedAt: number };
+export type Project = { exampleId?: string; id: string; name: string; source: string; layout: Layout; original: Layout; updatedAt: number };
 export type Result = { layout: Layout; html: string; css: string; exports: { html: string; react: string; tailwind?: string } };
 async function transact<T>(mode: IDBTransactionMode, run: (s: IDBObjectStore) => IDBRequest<T>): Promise<T> {
   const db = await new Promise<IDBDatabase>((resolve,reject) => {

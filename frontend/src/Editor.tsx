@@ -1,3 +1,4 @@
+import {examples} from './examples';
 import ResponsivePreview from './ResponsivePreview';
 import ImageTextExtraction from './ImageTextExtraction';
 import ExportMenu from './ExportMenu';
@@ -11,6 +12,7 @@ import {useEffect,useRef,useState,type PointerEvent} from 'react';
 import {ElementEditor,type Element,type Layout} from './ElementEditor';
 import {apiRequest,navigate,saveProject,type Project,type Result} from './projects';
 export default function Editor({project}:{project:Project}){
+ const [showGuide,setShowGuide]=useState(true);const guide=examples.find(e=>e.id===project.exampleId);
  const [draft,setDraft]=useState(project.layout),[selected,setSelected]=useState(project.layout.elements[0]?.id||'');
  const [past,setPast]=useState<Layout[]>([]),[future,setFuture]=useState<Layout[]>([]);
  const [result,setResult]=useState<Result|null>(null),[pending,setPending]=useState(true),[error,setError]=useState(''),[saveError,setSaveError]=useState(''),[saved,setSaved]=useState(true),[retry,setRetry]=useState(0);
@@ -64,6 +66,7 @@ export default function Editor({project}:{project:Project}){
  const handle=motion?.id===selected?motion:chosen;
  return <div className="studio">
  <div className="studio-top"><div><button className="text-button" onClick={()=>navigate('/projects')}>← Projects</button><strong>{project.name}</strong><span className="save-status">{saveError?'Not saved':saved?'Saved on this device':'Saving…'}</span></div><div className="actions"><button aria-expanded={leftOpen} onClick={()=>{setLeftOpen(!leftOpen);if(window.innerWidth<=800)setRightOpen(false);}}>{leftOpen?'Hide':'Show'} layers</button><button aria-expanded={rightOpen} onClick={()=>{setRightOpen(!rightOpen);if(window.innerWidth<=800)setLeftOpen(false);}}>{rightOpen?'Hide':'Show'} properties</button><ExportMenu disabled={!result||pending||!!error} tailwind={!!result?.exports.tailwind} onDownload={download} onBackup={backup}/></div></div>
+ {guide&&showGuide&&<div className="example-guidance"><span><strong>Try this first</strong> {guide.task}</span><button aria-label="Dismiss example guidance" onClick={()=>setShowGuide(false)}>×</button></div>}
  {(error||saveError)&&<div className="error" role="alert">{error||saveError}{error&&<button onClick={()=>setRetry(r=>r+1)}>Retry preview</button>}</div>}
  <div className={'studio-body '+(!leftOpen?'layers-collapsed ':'')+(!rightOpen?'properties-collapsed':'')}><aside className="layers" hidden={!leftOpen}><InsertTools disabled={draft.elements.length>=500} onAdd={add}/><div className="sidebar-heading"><strong>Layers</strong><span>{draft.elements.length}</span></div><p className="muted small">Select an element to refine it.</p><div className="layer-list">{draft.elements.map(e=><button key={e.id} className={selected===e.id?'active':''} onClick={()=>setSelected(e.id)}><span className="layer-icon">{e.type==='text'?'T':e.type==='image'?'▧':'▢'}</span><span>{e.text||e.type}<small>{e.type}</small></span></button>)}</div><button className="reference-toggle" onClick={()=>setReference(!reference)}>{reference?'Hide':'Show'} reference</button>{reference&&<img className="reference-image" src={project.source} alt="Original reference"/>}</aside>
  <section className="canvas-column"><div className="canvas-toolbar"><div className="actions"><button title="Undo (Ctrl/⌘ Z)" aria-label="Undo" disabled={!past.length} onClick={undo}>↶</button><button title="Redo (Ctrl/⌘ Shift Z)" aria-label="Redo" disabled={!future.length} onClick={redo}>↷</button><div className="tabs">{(['preview','html','css'] as const).map(t=><button key={t} aria-pressed={tab===t} onClick={()=>setTab(t)}>{t==='preview'?'Canvas':t.toUpperCase()}</button>)}</div></div></div>

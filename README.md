@@ -56,6 +56,10 @@ This does not recover the original site's responsive rules. Review grouping and 
 
 Exports include `src/components.tsx` with typed `ReconstructedButton`, `ReconstructedInput`, `ReconstructedText`, `ReconstructedImage` and `ReconstructedCard` components. Instances share these primitives; the button accepts an `onClick` handler. Composite component discovery and business logic are not inferred.
 
+## Try the gallery
+
+[Explore six examples](https://screen-weave.vercel.app/examples): a login, pricing cards, product page, dashboard, profile and illustrated banner. Compare reference designs with actual saved drafts, filter by category, and open an editable copy with a suggested first edit. [How the previews are generated](docs/EXAMPLES.md).
+
 ## How it works
 
 ```mermaid
