@@ -92,6 +92,9 @@ def export(layout):
                 markup.append(f'<input id="{identity}" aria-label="Reconstructed input" autocomplete="off">')
             else:
                 markup.append(f'<div id="{identity}" aria-hidden="true"></div>')
+    from app.responsive import wrap_markup, responsive_css
+    markup = wrap_markup(layout, markup)
+    rules.append(responsive_css(layout))
     document = '<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ScreenWeave reconstruction</title><link rel="stylesheet" href="styles.css"></head><body><main class="page">' + "\n".join(markup) + '</main></body></html>'
     return document, "\n".join(rules)
 

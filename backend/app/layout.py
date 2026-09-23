@@ -31,6 +31,7 @@ class Viewport(BaseModel):
     height: int = Field(gt=0, le=10000)
 
 class Layout(BaseModel):
+    responsive: bool = False
     version: Literal[1] = 1
     viewport: Viewport
     background: str = Field(pattern=r'^#[0-9a-fA-F]{6}$')

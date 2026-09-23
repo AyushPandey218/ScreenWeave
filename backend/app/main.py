@@ -37,7 +37,7 @@ app.add_middleware(
 
 @app.middleware("http")
 async def measure_requests(request: Request, call_next):
-    if request.url.path not in {"/reconstruct", "/render"} or request.method != "POST":
+    if request.url.path not in {"/reconstruct", "/render", "/extract-text"} or request.method != "POST":
         return await call_next(request)
     start, status = time.monotonic(), 500
     try:
@@ -139,5 +139,25 @@ async def reconstruct_image(request: Request) -> dict:
             return await run_in_threadpool(process_image, bytes(payload))
         except ValueError as exc:
             raise HTTPException(422, str(exc)) from exc
+    finally:
+        job_lock.release()
+
+
+@app.post('/extract-text')
+async def extract_image_text(request: Request):
+    from .text_extraction import extract_text
+    if not job_lock.acquire(blocking=False):
+        raise HTTPException(429, 'Another screenshot is being processed. Try again shortly.')
+    try:
+        payload=bytearray()
+        async for chunk in request.stream():
+            if len(payload)+len(chunk)>MAX_BYTES:
+                raise HTTPException(413, 'Please upload an image smaller than 5 MiB.')
+            payload.extend(chunk)
+        try:
+            layout=await run_in_threadpool(extract_text,bytes(payload))
+            return await run_in_threadpool(package_layout,layout)
+        except ValueError as exc:
+            raise HTTPException(422,str(exc)) from exc
     finally:
         job_lock.release()

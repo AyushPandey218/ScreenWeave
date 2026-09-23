@@ -33,5 +33,5 @@ def snapshot(busy):
         'requests': data['requests'], 'failed_requests': data['failed'],
         'average_seconds': round(data['total_seconds']/data['requests'], 3) if data['requests'] else None,
         'last_seconds': data['last_seconds'],
-        'scope': 'Reconstruction and render requests since this process started. Resets on restart.',
+        'scope': 'Reconstruction, text extraction and render requests since this process started. Resets on restart.',
     }

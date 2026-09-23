@@ -59,7 +59,8 @@ function layout(value: unknown): Layout {
   });
   const limitations = data.limitations ?? [];
   check(Array.isArray(limitations) && limitations.length <= 20 && limitations.every(v => typeof v === 'string' && v.length <= 2000), 'Invalid layout notes.');
-  const result: Layout = {version:1, viewport:{width,height}, background:color(data.background), elements, limitations};
+  check(data.responsive==null||typeof data.responsive==='boolean','Invalid responsive setting.');
+  const result: Layout = {version:1, responsive:data.responsive===true, viewport:{width,height}, background:color(data.background), elements, limitations};
   check(new TextEncoder().encode(JSON.stringify(result)).length <= 5 * 1024 * 1024, 'This layout is too large to render.');
   return result;
 }

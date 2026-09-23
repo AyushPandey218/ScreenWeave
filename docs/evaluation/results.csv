@@ -1,0 +1,13 @@
+case,variant,mae_rgb_255,pixels_over_25_pct,median_seconds,elements
+image-banner,baseline,61.2436,47.6772,1.1193,7
+image-cards,baseline,59.8936,57.2864,1.0344,4
+login,baseline,2.1045,1.8987,3.4287,7
+monospace-panel,baseline,9.164,4.3926,2.4848,5
+rounded-controls,baseline,2.0112,1.7477,4.3953,8
+serif-panel,baseline,9.301,4.4937,2.3324,5
+image-banner,current,10.7735,8.8323,1.0588,4
+image-cards,current,11.3112,8.413,1.0746,4
+login,current,2.1045,1.8987,3.6727,7
+monospace-panel,current,8.1643,3.847,2.7034,5
+rounded-controls,current,2.0112,1.7477,4.6319,8
+serif-panel,current,8.1845,3.9491,2.1089,5

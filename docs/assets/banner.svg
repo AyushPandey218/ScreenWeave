@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="360" viewBox="0 0 1200 360" role="img" aria-label="ScreenWeave — From pixels to editable possibilities">
+<defs><linearGradient id="bg"><stop stop-color="#142d2b"/><stop offset="1" stop-color="#315744"/></linearGradient><pattern id="dots" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1" fill="#b8d491" opacity=".15"/></pattern></defs>
+<rect width="1200" height="360" rx="24" fill="url(#bg)"/><rect width="1200" height="360" fill="url(#dots)"/>
+<rect x="55" y="48" width="183" height="30" rx="15" fill="#d8ec9b"/><text x="75" y="68" font-family="Arial,sans-serif" font-size="12" fill="#19372c" letter-spacing="2">SCREENSHOT TO CODE</text>
+<text x="55" y="156" font-family="Arial,sans-serif" font-size="65" font-weight="700" fill="#fff">ScreenWeave</text>
+<text x="58" y="202" font-family="Arial,sans-serif" font-size="24" fill="#d8e6cc">From pixels to editable possibilities.</text>
+<text x="58" y="274" font-family="Arial,sans-serif" font-size="15" fill="#bfceb7">RECONSTRUCT  /  REFINE  /  EXPORT</text>
+<rect x="765" y="47" width="370" height="265" rx="17" fill="#f4f7ef"/><path d="M765 83H1135" stroke="#dbe4d5"/><circle cx="785" cy="65" r="4" fill="#86a365"/><circle cx="800" cy="65" r="4" fill="#b9c9a6"/><circle cx="815" cy="65" r="4" fill="#d0dbc4"/>
+<rect x="789" y="105" width="70" height="183" rx="7" fill="#e5eddc"/><path d="M803 126H843M803 151H836M803 176H843" stroke="#9eb78c" stroke-width="5" stroke-linecap="round"/>
+<rect x="887" y="106" width="217" height="182" rx="14" fill="#fff" stroke="#95af7a"/><text x="908" y="142" font-family="Arial,sans-serif" font-size="17" fill="#233e30">Make it yours.</text><rect x="908" y="159" width="174" height="27" rx="13" fill="#f6f8f1" stroke="#d5dfc9"/><rect x="908" y="197" width="174" height="27" rx="13" fill="#f6f8f1" stroke="#d5dfc9"/><rect x="908" y="239" width="174" height="27" rx="13" fill="#254c3a"/><path d="M1089 271L1107 280L1097 284L1093 295Z" fill="#92ad6c" stroke="#fff" stroke-width="2"/>
+</svg>

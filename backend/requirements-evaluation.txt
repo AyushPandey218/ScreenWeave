@@ -1,0 +1,4 @@
+# Optional local evaluation dependencies; not installed on the production server.
+-r requirements-ocr.txt
+matplotlib==3.10.8
+httpx>=0.28,<1

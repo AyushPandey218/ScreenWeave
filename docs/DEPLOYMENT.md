@@ -1,19 +1,8 @@
 # Publish ScreenWeave on free services
 
-## Status
+## Deployment configuration
 
-Not published. GitHub, Render, and Vercel accounts must be created by the owner.
-Local measurements do not certify Render performance. Docker is not installed
-on the development machine, so the Linux image still needs a build test.
-
-Local full-service benchmark: the initial sampled peak was 670 MiB. Capping the
-OCR image's long side to 960 pixels reduced it to 259 MiB over nine reconstruction
-requests and an edited-layout render. Small fixtures took about 3–4 seconds;
-the four-megapixel resized fixture took about 7–8 seconds. All 12 regression/API
-tests pass after the change. The large fixture's detected element count changed
-from 12 to 11, so this memory optimization has a quality trade-off that needs
-real-screenshot evaluation. See `reports/service-benchmark-before.json` and
-`reports/service-benchmark.json`. None of these results certify hosted behavior.
+ScreenWeave uses Vercel and Render. Project URLs are in the root README. Local checks do not certify hosted performance; verify deployment status in the provider dashboards.
 
 ## 1. Accounts and source repository
 
@@ -54,7 +43,7 @@ Do not use `*`. Preview deployment URLs need their own explicit authorization.
 - Open the public frontend with local development servers stopped.
 - Upload a simple and a rounded-controls screenshot.
 - Confirm preview, text/icon reconstruction, and editing work.
-- Download both ZIP formats and build the React export.
+- Download all three ZIP formats and build the React export.
 - Check invalid uploads, backend startup delay, and busy responses.
 - Inspect memory/CPU and logs across repeated requests and maximum-size uploads.
 - Verify the service stays within the free plan; local results are preliminary.

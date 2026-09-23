@@ -54,6 +54,8 @@ export default function App() {
     if tailwind:
         from tailwind_export import apply_tailwind
         apply_tailwind(layout, files)
+    from app.components import componentize
+    componentize(layout, files, tailwind)
     output.mkdir(parents=True, exist_ok=True)
     for name, content in files.items():
         path = output / name

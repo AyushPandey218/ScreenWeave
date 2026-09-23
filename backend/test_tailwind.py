@@ -19,7 +19,7 @@ class TailwindTests(unittest.TestCase):
                 self.assertIn('rounded-[22px]',classes)
                 self.assertIn('[font:400_26px/normal_Arial,sans-serif]',classes)
                 self.assertIn('text-[#112233]',classes)
-                self.assertIn('element.text',archive.read('src/App.tsx').decode())
+                self.assertIn('element.text',archive.read('src/components.tsx').decode())
                 self.assertIn('@tailwindcss/vite',archive.read('vite.config.ts').decode())
                 package=json.loads(archive.read('package.json'))
                 self.assertIn('tailwindcss',package['devDependencies'])

@@ -20,6 +20,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('n
  assert.equal(Number(await p.getByLabel('Y position',{exact:true}).inputValue()),10);
  await p.getByRole('button',{name:'Undo',exact:true}).click();await ready();
  assert.equal(Number(await p.getByLabel('Y position',{exact:true}).inputValue()),0);
+ await p.locator('.canvas-options summary').click();
  await p.getByRole('checkbox',{name:'Snap to 8 px grid',exact:true}).check();
  const hit=await p.getByRole('button',{name:'Select text Portable project',exact:true}).boundingBox();
  await p.mouse.move(hit.x+hit.width/2,hit.y+hit.height/2);await p.mouse.down();await p.mouse.move(hit.x+hit.width/2+19,hit.y+hit.height/2+26,{steps:5});await p.mouse.up();await ready();

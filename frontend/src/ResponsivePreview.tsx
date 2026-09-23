@@ -1,0 +1,7 @@
+import {useRef,useState} from 'react';
+import type {Result} from './projects';
+export default function ResponsivePreview({result}:{result:Result}){
+ const dialog=useRef<HTMLDialogElement>(null),[width,setWidth]=useState(390);
+ const doc=result.html.replace('<link rel="stylesheet" href="styles.css">',`<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src data:;"><style>${result.css}</style>`);
+ return <><button onClick={()=>dialog.current?.showModal()}>Preview screen sizes</button><dialog ref={dialog} className="extraction-dialog" aria-labelledby="responsive-title"><h2 id="responsive-title">Responsive preview</h2><div className="actions"><label>Screen width<select aria-label="Preview screen width" value={width} onChange={e=>setWidth(Number(e.target.value))}><option value={320}>Small phone · 320 px</option><option value={390}>Phone · 390 px</option><option value={768}>Tablet · 768 px</option><option value={result.layout.viewport.width}>Original · {result.layout.viewport.width} px</option></select></label><button onClick={()=>dialog.current?.close()}>Close preview</button></div><p>Groups stack below 640 px. Check text readability and grouping; internal content scales proportionally.</p><div style={{overflow:'auto',marginTop:16}}><iframe title="Responsive export preview" sandbox="" srcDoc={doc} style={{width,height:560,border:'1px solid #dce5db',display:'block',margin:'auto'}}/></div></dialog></>;
+}
